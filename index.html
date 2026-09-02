@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>四象限时间管理 · 可拖动任务</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 100vw; height: 100vh; overflow: hidden; user-select: none; -webkit-user-select: none;
+    background: radial-gradient(circle at 30% 20%, #1e293b, #0f172a 70%);
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
+
+  /* ---------- 四个象限背景 ---------- */
+  .q { position: fixed; width: 50vw; height: 50vh; z-index: 1;
+       transition: box-shadow .18s ease, filter .18s ease; }
+  .q1 { top: 0;    left: 0;    background: linear-gradient(135deg, rgba(239,68,68,.22),  rgba(239,68,68,.05)); }
+  .q2 { top: 0;    left: 50vw; background: linear-gradient(135deg, rgba(34,197,94,.20),  rgba(34,197,94,.05)); }
+  .q3 { top: 50vh; left: 0;    background: linear-gradient(135deg, rgba(245,158,11,.18), rgba(245,158,11,.04)); }
+  .q4 { top: 50vh; left: 50vw; background: linear-gradient(135deg, rgba(148,163,184,.14), rgba(148,163,184,.04)); }
+  /* 拖动时高亮目标象限 */
+  .q.active { box-shadow: inset 0 0 0 3px rgba(255,255,255,.65); filter: brightness(1.25); }
+
+  /* 中心十字线 */
+  #cross { position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: linear-gradient(to right,  transparent calc(50% - 1px), rgba(255,255,255,.22) 50%, transparent calc(50% + 1px)),
+                linear-gradient(to bottom, transparent calc(50% - 1px), rgba(255,255,255,.22) 50%, transparent calc(50% + 1px)); }
+
+  /* 象限角标 */
+  .tag { position: absolute; top: 18px; left: 22px; display: flex; align-items: center; gap: 10px;
+         pointer-events: none; z-index: 3; }
+  .chip { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center;
+          justify-content: center; color: #fff; font-weight: 700; font-size: 15px;
+          box-shadow: 0 4px 10px rgba(0,0,0,.3); }
+  .c1 { background: linear-gradient(135deg,#ef4444,#b91c1c); }
+  .c2 { background: linear-gradient(135deg,#22c55e,#15803d); }
+  .c3 { background: linear-gradient(135deg,#f59e0b,#b45309); }
+  .c4 { background: linear-gradient(135deg,#94a3b8,#475569); }
+  .tag b { display: block; color: rgba(255,255,255,.92); font-size: 15px; letter-spacing: 1px; }
+  .tag i  { display: block; font-style: normal; color: rgba(255,255,255,.5); font-size: 12px; margin-top: 2px; }
+  .num { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+         font-size: 34vh; font-weight: 800; color: rgba(255,255,255,.045); pointer-events: none; z-index: 0; }
+
+  /* ---------- 可拖动方块 ---------- */
+  #stage { position: fixed; inset: 0; z-index: 4; touch-action: none; }
+  .box { position: absolute; display: flex; align-items: center; justify-content: center;
+         border-radius: 22px; cursor: grab; text-align: center; line-height: 1.35; color: #fff;
+         box-shadow: 0 10px 24px rgba(0,0,0,.35);
+         transition: box-shadow .15s ease, transform .1s ease; will-change: left, top; }
+  .box:hover  { box-shadow: 0 14px 30px rgba(0,0,0,.45); }
+  .box:active { cursor: grabbing; transform: scale(1.05);
+                box-shadow: 0 18px 36px rgba(0,0,0,.55); }
+  .box .label { pointer-events: none; font-size: 16px; font-weight: 600; padding: 0 10px;
+                text-shadow: 0 1px 3px rgba(0,0,0,.35); }
+
+  /* ---------- 顶部提示 / 底部图例 / 提示气泡 ---------- */
+  .pill { position: fixed; left: 50%; transform: translateX(-50%); z-index: 5;
+          background: rgba(15,23,42,.6); border: 1px solid rgba(255,255,255,.14);
+          border-radius: 999px; padding: 7px 16px; color: rgba(255,255,255,.75);
+          font-size: 13px; pointer-events: none; white-space: nowrap; backdrop-filter: blur(4px); }
+  #hint { top: 14px; }
+  #legend { bottom: 12px; font-size: 12px; color: rgba(255,255,255,.45); }
+  #toast { top: 58px; opacity: 0; transition: opacity .25s ease, transform .25s ease;
+           transform: translateX(-50%) translateY(-6px); color: #fff; font-weight: 600; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  /* ---------- 添加按钮 ---------- */
+  .fab { position: fixed; right: 22px; bottom: 66px; z-index: 6; width: 58px; height: 58px;
+         border: none; border-radius: 50%; cursor: pointer; color: #fff; font-size: 27px; line-height: 1;
+         background: linear-gradient(135deg, #6366f1, #8b5cf6);
+         box-shadow: 0 8px 20px rgba(99,102,241,.55);
+         transition: transform .15s ease, filter .15s ease; }
+  .fab:hover  { transform: scale(1.1); filter: brightness(1.1); }
+  .fab:active { transform: scale(.94); }
+
+  /* ---------- 添加弹窗 ---------- */
+  .overlay { position: fixed; inset: 0; z-index: 20; display: none;
+             align-items: center; justify-content: center;
+             background: rgba(2,6,23,.55); backdrop-filter: blur(3px); }
+  .overlay.open { display: flex; }
+  .dlg { width: min(92vw, 380px); background: #1e293b; border: 1px solid rgba(255,255,255,.12);
+         border-radius: 18px; padding: 22px; box-shadow: 0 24px 60px rgba(0,0,0,.5);
+         animation: pop .18s ease; }
+  @keyframes pop { from { transform: scale(.9); opacity: 0; } }
+  .dlg h3 { color: #fff; font-size: 16px; margin-bottom: 16px; letter-spacing: 1px; }
+  .dlg input { width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid #334155;
+               background: #0f172a; color: #fff; font-size: 15px; outline: none; }
+  .dlg input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(99,102,241,.3); }
+  .swatches { display: flex; gap: 10px; margin: 16px 0 18px; flex-wrap: wrap; }
+  .sw { width: 32px; height: 32px; border-radius: 10px; border: 2px solid transparent;
+        cursor: pointer; transition: transform .12s ease, border-color .12s ease; }
+  .sw:hover { transform: scale(1.15); }
+  .sw.sel  { border-color: #fff; transform: scale(1.12); box-shadow: 0 0 10px rgba(255,255,255,.35); }
+  .btns { display: flex; justify-content: flex-end; gap: 10px; }
+  .btn { padding: 9px 20px; border: none; border-radius: 10px; cursor: pointer;
+         font-size: 14px; color: #fff; transition: filter .12s ease; }
+  .btn:hover { filter: brightness(1.15); }
+  .btn.cancel { background: #334155; color: rgba(255,255,255,.85); }
+  .btn.ok { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  /* ---------- 垃圾桶：把方块拖到这里删除 ---------- */
+  .trash { position: fixed; left: 22px; bottom: 66px; z-index: 6;
+           width: 80px; height: 80px; border-radius: 24px;
+           display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+           pointer-events: none;
+           background: rgba(127,29,29,.3);
+           border: 2px dashed rgba(239,68,68,.65); color: rgba(252,165,165,.95);
+           transition: background .15s ease, transform .15s ease, border-color .15s ease,
+                       box-shadow .15s ease, color .15s ease; }
+  .trash svg { width: 30px; height: 30px; }
+  .trash b { font-weight: 400; font-size: 11px; letter-spacing: 2px; }
+  .trash.hot { background: rgba(239,68,68,.95); border-style: solid; border-color: #fff;
+               color: #fff; transform: scale(1.14);
+               box-shadow: 0 0 28px rgba(239,68,68,.8); }
+  /* ---------- 重置按钮（点两下确认） ---------- */
+  .rbtn { position: fixed; top: 14px; right: 18px; z-index: 6;
+          display: flex; align-items: center; gap: 6px; cursor: pointer;
+          background: rgba(15,23,42,.6); border: 1px solid rgba(255,255,255,.14);
+          color: rgba(255,255,255,.7); border-radius: 999px; padding: 8px 15px;
+          font-size: 13px; backdrop-filter: blur(4px); font-family: inherit;
+          transition: background .15s, color .15s, border-color .15s; }
+  .rbtn svg { width: 14px; height: 14px; }
+  .rbtn:hover { color: #fff; border-color: rgba(255,255,255,.35); }
+  .rbtn.armed { background: rgba(239,68,68,.3); border-color: #ef4444; color: #fecaca; }
+  /* ---------- 收支对比侧边栏 ---------- */
+  :root { --ledW: min(330px, calc(100vw - 16px)); }
+  body.ledger-open .fab  { right: calc(var(--ledW) + 18px); }
+  body.ledger-open .rbtn { right: calc(var(--ledW) + 14px); }
+  body.ledger-open #legend { left: calc((100% - var(--ledW)) / 2); transform: none; }
+  .fab, .rbtn { transition: right .22s ease; }
+
+  .ledger { position: fixed; top: 0; right: 0; bottom: 0; width: var(--ledW); z-index: 15;
+            background: rgba(13,20,38,.97); border-left: 1px solid rgba(255,255,255,.12);
+            box-shadow: -14px 0 44px rgba(0,0,0,.5); backdrop-filter: blur(6px);
+            display: flex; flex-direction: column; transition: transform .25s ease; }
+  body:not(.ledger-open) .ledger { transform: translateX(101%); }
+
+  .ledger header { padding: 13px 14px 10px; border-bottom: 1px dashed rgba(255,255,255,.1);
+                  display: flex; justify-content: space-between; align-items: flex-start; }
+  .ledger header b { color: #fff; font-size: 15px; letter-spacing: 2px; }
+  .ledger header i { display: block; font-style: normal; color: rgba(255,255,255,.45);
+                     font-size: 11px; margin-top: 3px; }
+  .ledger header .hx { background: none; border: none; color: rgba(255,255,255,.65);
+                       font-size: 20px; cursor: pointer; line-height: 1; padding: 2px 8px; }
+  .ledger header .hx:hover { color: #fff; }
+
+  /* 记一笔输入条 */
+  .addbar { display: flex; gap: 6px; align-items: center; padding: 10px 12px;
+            border-bottom: 1px dashed rgba(255,255,255,.08); }
+  .tswitch { display: flex; flex: none; border-radius: 9px; overflow: hidden;
+             border: 1px solid rgba(255,255,255,.2); }
+  .tswitch button { border: none; background: transparent; color: rgba(255,255,255,.75);
+                    padding: 7px 10px; cursor: pointer; font-size: 13px; font-family: inherit; }
+  .tswitch button.on.in  { background: #16a34a; color: #fff; }
+  .tswitch button.on.out { background: #dc2626; color: #fff; }
+  .addbar input { min-width: 0; background: #0b1220; border: 1px solid #334155; color: #fff;
+                  border-radius: 8px; padding: 7px 8px; font-size: 13px; width: 86px; outline: none; }
+  .addbar input:focus { border-color: #818cf8; }
+  .addbar #ledNote { flex: 1; width: auto; }
+  .addbar .go { flex: none; width: 34px; height: 34px; border: none; border-radius: 9px;
+               cursor: pointer; color: #fff; font-size: 17px; line-height: 1;
+               background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  .addbar .go:hover { filter: brightness(1.15); }
+
+  /* 两列表格 */
+  .ltable { flex: 1; overflow-y: auto; padding: 8px 10px; }
+  .ltable table { width: 100%; border-collapse: separate; border-spacing: 0 6px; table-layout: fixed; }
+  .ltable th { font-size: 12px; letter-spacing: 4px; text-align: center; padding-bottom: 4px; font-weight: 600; }
+  .ltable th.in  { color: #4ade80; }
+  .ltable th.out { color: #f87171; }
+  .ltable td { width: 50%; vertical-align: top; background: rgba(255,255,255,.04);
+               border-radius: 10px; padding: 7px 10px; position: relative; }
+  .ltable td.empty { color: rgba(255,255,255,.22); text-align: center; font-size: 12px; }
+  .ltable td.in  .amt { color: #4ade80; }
+  .ltable td.out .amt { color: #f87171; }
+  .amt { font-size: 13.5px; font-weight: 700; }
+  .note { color: rgba(255,255,255,.5); font-size: 11px; margin-top: 3px;
+          overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .del { position: absolute; top: 3px; right: 5px; background: none; border: none;
+         color: rgba(255,255,255,.35); font-size: 11px; cursor: pointer; opacity: 0; padding: 2px; }
+  .ltable td:hover .del { opacity: 1; }
+  .del:hover { color: #f87171; }
+  .totalrow td { background: rgba(255,255,255,.09); text-align: center; }
+  .totalrow .amt { font-weight: 800; font-size: 13px; }
+
+  /* 差距面板 */
+  .lgap { border-top: 1px dashed rgba(255,255,255,.14); padding: 10px 14px 12px;
+          background: rgba(2,6,23,.55); }
+  .lgap .row1 { display: flex; justify-content: space-between; align-items: center; }
+  .lgap .lbl { font-size: 11px; color: rgba(255,255,255,.55); letter-spacing: 2px; }
+  .diff { font-size: 23px; font-weight: 800; margin-top: 2px; }
+  .diff.pos  { color: #4ade80; }
+  .diff.neg  { color: #f87171; }
+  .diff.zero { color: #cbd5e1; }
+  .badge { font-size: 11px; padding: 2px 9px; border-radius: 999px; border: 1px solid; font-weight: 600; }
+  .badge.pos  { color: #4ade80; border-color: #16a34a; }
+  .badge.neg  { color: #f87171; border-color: #dc2626; }
+  .badge.zero { color: #cbd5e1; border-color: #64748b; }
+  .bar { height: 10px; border-radius: 6px; overflow: hidden; display: flex;
+         margin: 10px 0 5px; background: rgba(255,255,255,.07); }
+  .bar .bi { height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); }
+  .bar .bo { height: 100%; background: linear-gradient(90deg, #f87171, #dc2626); }
+  .barfoot { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,.6); }
+  .lgap .tools { margin-top: 9px; display: flex; justify-content: flex-end; }
+  .mini { background: none; border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.65);
+          font-size: 11px; border-radius: 999px; padding: 4px 12px; cursor: pointer; font-family: inherit; }
+  .mini:hover { color: #fff; border-color: rgba(255,255,255,.45); }
+  .mini.armed { background: rgba(239,68,68,.25); border-color: #ef4444; color: #fecaca; }
+
+  /* 收起后的开合标签（贴右侧竖排） */
+  .ledtab { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 9;
+            writing-mode: vertical-rl; display: flex; align-items: center; gap: 7px; cursor: pointer;
+            padding: 15px 9px; background: rgba(15,23,42,.9); border: 1px solid rgba(255,255,255,.18);
+            border-right: none; border-radius: 14px 0 0 14px; color: rgba(255,255,255,.85);
+            font-size: 13px; letter-spacing: 4px; backdrop-filter: blur(4px); }
+  .ledtab .ic { writing-mode: horizontal-tb; font-size: 15px; }
+  .ledtab:hover { color: #c7d2fe; border-color: #818cf8; }
+  body.ledger-open .ledtab { display: none; }
+</style>
+</head>
+<body class="ledger-open">
+
+  <!-- 四个象限：1 重要且紧急 | 2 重要不紧急 | 3 不重要但紧急 | 4 不重要且不紧急 -->
+  <div class="q q1"><span class="num">1</span>
+    <span class="tag"><span class="chip c1">1</span><span><b>重要且紧急</b><i>立即执行</i></span></span></div>
+  <div class="q q2"><span class="num">2</span>
+    <span class="tag"><span class="chip c2">2</span><span><b>重要不紧急</b><i>制定计划</i></span></span></div>
+  <div class="q q3"><span class="num">3</span>
+    <span class="tag"><span class="chip c3">3</span><span><b>不重要但紧急</b><i>委托他人</i></span></span></div>
+  <div class="q q4"><span class="num">4</span>
+    <span class="tag"><span class="chip c4">4</span><span><b>不重要且不紧急</b><i>减少或删除</i></span></span></div>
+  <div id="cross"></div>
+
+  <div id="stage"></div>
+  <div class="pill" id="hint">按住任务方块拖到合适的象限，拖进左下角垃圾桶可删除 🖐</div>
+  <div class="pill" id="toast"></div>
+  <div class="pill" id="legend">横轴 = 紧急性（左：紧急 → 右：不紧急）　纵轴 = 重要性（上：重要 → 下：不重要）</div>
+
+
+  <!-- 添加方块按钮 -->
+  <button class="fab" id="addBtn" title="添加一个新任务方块">＋</button>
+
+  <!-- 添加弹窗 -->
+  <div class="overlay" id="overlay">
+    <div class="dlg">
+      <h3>＋ 添加任务方块</h3>
+      <input id="txt" type="text" maxlength="12" placeholder="输入任务名称，留空则自动命名" autocomplete="off" />
+      <div class="swatches" id="swatches"></div>
+      <div class="btns">
+        <button type="button" class="btn cancel" id="cancelBtn">取消</button>
+        <button type="button" class="btn ok" id="okBtn">添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 垃圾桶：把方块拖到这里删除 -->
+  <div class="trash" id="trash">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 6h18" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
+    <b>垃圾桶</b>
+  </div>
+
+  <!-- 重置：双击确认，清空存档并恢复示例任务 -->
+  <button class="rbtn" id="resetBtn" title="清空当前任务并恢复示例（点两下确认）">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="1 4 1 10 7 10" />
+      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+    </svg>
+    <span id="resetTxt">重置</span>
+  </button>
+
+  <!-- 收支对比侧边栏：收入 | 支出 两列表 + 差距 -->
+  <aside class="ledger" id="ledger">
+    <header>
+      <div><b>收支对比</b><i>收入 − 支出 = 差距</i></div>
+      <button class="hx" id="ledClose" title="收起侧边栏">»</button>
+    </header>
+    <div class="addbar">
+      <div class="tswitch" id="ledSwitch">
+        <button type="button" class="on in" data-t="1">收</button>
+        <button type="button" data-t="0">支</button>
+      </div>
+      <input id="ledAmt" type="number" min="0" step="0.01" placeholder="金额" />
+      <input id="ledNote" type="text" maxlength="14" placeholder="备注(可选)" />
+      <button class="go" id="ledGo" title="记一笔">＋</button>
+    </div>
+    <div class="ltable">
+      <table>
+        <thead><tr><th class="in">收 入</th><th class="out">支 出</th></tr></thead>
+        <tbody id="ledBody"></tbody>
+      </table>
+    </div>
+    <div class="lgap">
+      <div class="row1"><span class="lbl">差距（收入−支出）</span><span id="ledBadgeBox"></span></div>
+      <div class="diff zero" id="ledDiff">¥0</div>
+      <div class="bar"><div class="bi" id="ledBarIn"></div><div class="bo" id="ledBarOut"></div></div>
+      <div class="barfoot"><span id="ledInTotal">收入 ¥0</span><span id="ledOutTotal">支出 ¥0</span></div>
+      <div class="tools"><button class="mini" id="ledClear">清空记录</button></div>
+    </div>
+  </aside>
+
+  <!-- 收起侧边栏后的竖排开合标签 -->
+  <div class="ledtab" id="ledTab" title="打开收支对比"><span class="ic">📊</span><span>收 支</span></div>
+<script>
+  const stage = document.getElementById("stage");
+  const quads = document.querySelectorAll(".q");
+  const NAMES = ["重要且紧急", "重要不紧急", "不重要但紧急", "不重要且不紧急"];
+  let topZ = 1, cur = null;
+  const trashEl = document.getElementById("trash");
+
+  // ---------- 示例任务与“添加方块”共用逻辑 ----------
+  const PALETTE = ["#ef4444", "#f97316", "#ec4899", "#8b5cf6",
+                   "#6366f1", "#14b8a6", "#22c55e", "#f59e0b"];
+
+  // 新建一个方块（文字用 textContent 写入，名称含特殊字符也安全）
+  function addBox(name, color, x, y, s) {
+    const box = document.createElement("div");
+    box.className = "box";
+    // 传了合法大小就用它（恢复存档），否则随机 130~180
+    const size = s && s >= 90 && s <= 250 ? s : 130 + Math.floor(Math.random() * 50);
+    box.style.width = box.style.height = size + "px";
+    box.style.background = "linear-gradient(135deg, " + color + ", " + color + "88)";
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = name;
+    box.appendChild(label);
+    let px, py;
+    if (typeof x === "number" && typeof y === "number") {
+      // 恢复保存的位置，并限制在当前视口内
+      px = Math.max(0, Math.min(x, innerWidth - size));
+      py = Math.max(70, Math.min(y, innerHeight - size - 40));
+    } else {
+      const pos = freePos(size);
+      px = pos[0];
+      py = pos[1];
+    }
+    box.style.left = px + "px";
+    box.style.top = py + "px";
+    stage.appendChild(box);
+    return box;
+  }
+
+  // 在空白处找一个不与已有方块重叠的位置（最多试 24 次）
+  function freePos(s) {
+    const yTop = 70, yMax = innerHeight - s - 120;
+    for (let t = 0; t < 24; t++) {
+      const x = Math.random() * (innerWidth - s);
+      const y = yTop + Math.random() * Math.max(10, yMax - yTop);
+      let hit = false;
+      for (let i = 0; i < stage.children.length; i++) {
+        const b = stage.children[i];
+        const bx = parseFloat(b.style.left) || 0;
+        const by = parseFloat(b.style.top) || 0;
+        const bw = b.offsetWidth, bh = b.offsetHeight;
+        if (!(x + s + 10 <= bx || bx + bw + 10 <= x || y + s + 10 <= by || by + bh + 10 <= y)) {
+          hit = true;
+          break;
+        }
+      }
+      if (!hit) return [x, y];
+    }
+    const x = Math.random() * (innerWidth - s);
+    const y = yTop + Math.random() * Math.max(10, yMax - yTop);
+    return [x, y];
+  }
+
+  // 初始示例任务（文字、颜色）
+  const TASKS = [
+    ["处理客户投诉", "#ef4444"],
+    ["修复线上故障", "#dc2626"],
+    ["项目紧急验收", "#f97316"],
+    ["每日锻炼身体", "#22c55e"],
+    ["阅读专业书籍", "#14b8a6"],
+    ["学习新的技能", "#6366f1"],
+    ["刷短视频消遣", "#a855f7"],
+    ["整理手机相册", "#64748b"],
+  ];
+  // ---------- 自动保存 / 恢复（localStorage） ----------
+  const SAVE_KEY = "matrixTasksV1";
+  let saveWarned = false;
+
+  // 收集所有方块：名称、颜色、位置、大小、层级
+  function collectState() {
+    return Array.prototype.slice.call(stage.querySelectorAll(".box")).map((b, i) => {
+      const label = b.querySelector(".label");
+      const m = (b.style.background || "").match(/#[0-9a-fA-F]{6}/);
+      const z = parseInt(b.style.zIndex, 10);
+      return {
+        t: label ? label.textContent : "",
+        c: m ? m[0] : "#6366f1",
+        x: parseFloat(b.style.left) || 0,
+        y: parseFloat(b.style.top) || 0,
+        s: b.offsetWidth,
+        z: isNaN(z) ? i : z,
+      };
+    });
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(collectState()));
+    } catch (err) {
+      console.warn("自动保存失败：", err);
+      if (!saveWarned) {
+        saveWarned = true;
+        showToast("当前浏览器不允许本地保存");
+      }
+    }
+  }
+
+  // 返回恢复的数量；没有存档或存档损坏返回 null
+  function restoreState() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (raw === null) return null;
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return null;
+      arr.forEach((it) => {
+        const b = addBox(
+          it.t || "",
+          /^#[0-9a-fA-F]{6}$/.test(it.c) ? it.c : "#6366f1",
+          Number(it.x), Number(it.y), Number(it.s)
+        );
+        const z = parseInt(it.z, 10);
+        if (!isNaN(z)) {
+          b.style.zIndex = z;
+          if (z >= topZ) topZ = z + 1;
+        }
+      });
+      return arr.length;
+    } catch (err) {
+      console.warn("恢复失败：", err);
+      return null;
+    }
+  }
+
+
+  // ---------- 添加按钮与弹窗 ----------
+  const overlay = document.getElementById("overlay");
+  const txt = document.getElementById("txt");
+  const swRow = document.getElementById("swatches");
+  const okBtn = document.getElementById("okBtn");
+  const cancelBtn = document.getElementById("cancelBtn");
+  let selColor = PALETTE[0];
+
+  // 生成颜色选择器
+  PALETTE.forEach((c) => {
+    const sw = document.createElement("button");
+    sw.type = "button";
+    sw.className = "sw";
+    sw.style.background = "linear-gradient(135deg, " + c + ", " + c + "cc)";
+    sw.title = "选择颜色";
+    sw.addEventListener("click", () => {
+      swRow.querySelectorAll(".sw").forEach((x) => x.classList.remove("sel"));
+      sw.classList.add("sel");
+      selColor = c;
+    });
+    swRow.appendChild(sw);
+  });
+  if (swRow.firstChild) swRow.firstChild.classList.add("sel");
+
+  const nextTaskNo = () => stage.querySelectorAll(".box").length + 1;
+
+  function openDlg() {
+    txt.value = "任务 " + nextTaskNo();
+    overlay.classList.add("open");
+    txt.focus();
+    txt.select();
+  }
+  function closeDlg() {
+    overlay.classList.remove("open");
+  }
+  function confirmAdd() {
+    const name = txt.value.trim() || ("任务 " + nextTaskNo());
+    addBox(name, selColor);
+    saveState();
+    showToast("已添加：「" + name + "」");
+    closeDlg();
+  }
+
+  document.getElementById("addBtn").addEventListener("click", openDlg);
+  okBtn.addEventListener("click", confirmAdd);
+  cancelBtn.addEventListener("click", closeDlg);
+  overlay.addEventListener("pointerdown", (e) => {
+    if (e.target === overlay) closeDlg();
+  });
+  txt.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") confirmAdd();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeDlg();
+  });
+  // 根据方块中心位置判断所在象限（0=左上 … 3=右下）
+  function quadIndex(cx, cy) {
+    return (cx >= innerWidth / 2 ? 1 : 0) + (cy >= innerHeight / 2 ? 2 : 0);
+  }
+  function markQuad(i) {
+    if (cur !== null) quads[cur].classList.remove("active");
+    cur = i;
+    if (i !== null) quads[i].classList.add("active");
+  }
+
+  let toastTimer = null;
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 1100);
+  }
+
+  stage.addEventListener("pointerdown", (e) => {
+    const box = e.target.closest(".box");
+    if (!box) return;
+    box.setPointerCapture(e.pointerId);
+    const r = box.getBoundingClientRect();
+    const ox = e.clientX - r.left, oy = e.clientY - r.top;
+    box.style.zIndex = ++topZ;
+    markQuad(quadIndex(r.left + r.width / 2, r.top + r.height / 2));
+
+    // 是否已进入垃圾桶区域（开始拖动时缓存其位置）
+    const tr = trashEl.getBoundingClientRect();
+    const overTrash = (x, y) =>
+      x + box.offsetWidth >= tr.left && x <= tr.right &&
+      y + box.offsetHeight >= tr.top && y <= tr.bottom;
+    let drop = false;
+
+    const onMove = (ev) => {
+      let x = ev.clientX - ox;
+      let y = ev.clientY - oy;
+      x = Math.max(0, Math.min(x, innerWidth - box.offsetWidth));
+      y = Math.max(0, Math.min(y, innerHeight - box.offsetHeight));
+      box.style.left = x + "px";
+      box.style.top = y + "px";
+      drop = overTrash(x, y);
+      trashEl.classList.toggle("hot", drop);
+      if (drop) {
+        markQuad(null);            // 悬停在垃圾桶上时不高亮象限
+      } else {
+        markQuad(quadIndex(x + box.offsetWidth / 2, y + box.offsetHeight / 2));
+      }
+    };
+
+    const onUp = () => {
+      trashEl.classList.remove("hot");
+      if (drop) {
+        // 扔进垃圾桶：缩小旋转消失后移除
+        const lab = box.querySelector(".label");
+        const nm = lab ? lab.textContent : "";
+        markQuad(null);
+        box.animate(
+          [
+            { transform: "scale(1) rotate(0deg)", opacity: 1 },
+            { transform: "scale(.15) rotate(30deg)", opacity: 0 },
+          ],
+          { duration: 280, easing: "ease-in" }
+        ).onfinish = () => { box.remove(); saveState(); };
+        showToast("已删除：「" + nm + "」");
+      } else {
+        const i = quadIndex(
+          parseFloat(box.style.left) + box.offsetWidth / 2,
+          parseFloat(box.style.top) + box.offsetHeight / 2
+        );
+        showToast("已放入：「" + NAMES[i] + "」");
+        markQuad(null);
+        saveState();
+      }
+      box.removeEventListener("pointermove", onMove);
+      box.removeEventListener("pointerup", onUp);
+      box.removeEventListener("pointercancel", onUp);
+    };
+    box.addEventListener("pointermove", onMove);
+    box.addEventListener("pointerup", onUp);
+    box.addEventListener("pointercancel", onUp);
+  });
+  // 启动：有存档就恢复；没有则生成示例任务并首次保存
+  const savedCount = restoreState();
+  if (savedCount === null) {
+    TASKS.forEach((t) => addBox(t[0], t[1]));
+    saveState();
+  } else if (savedCount > 0) {
+    showToast("已恢复上次的 " + savedCount + " 个任务");
+  }
+  // ---------- 重置：清空存档并恢复示例任务（点两下确认） ----------
+  const resetBtn = document.getElementById("resetBtn");
+  const resetTxt = document.getElementById("resetTxt");
+  let resetArmTimer = null;
+
+  function disarmReset() {
+    resetBtn.classList.remove("armed");
+    resetTxt.textContent = "重置";
+    clearTimeout(resetArmTimer);
+  }
+
+  resetBtn.addEventListener("click", () => {
+    if (!resetBtn.classList.contains("armed")) {
+      resetBtn.classList.add("armed");
+      resetTxt.textContent = "再点一次确认？";
+      clearTimeout(resetArmTimer);
+      resetArmTimer = setTimeout(disarmReset, 3000);
+      return;
+    }
+    disarmReset();
+    try { localStorage.removeItem(SAVE_KEY); } catch (err) { /* 忽略 */ }
+    stage.innerHTML = "";
+    topZ = 1;
+    TASKS.forEach((t) => addBox(t[0], t[1]));
+    saveState();
+    showToast("已重置为示例任务");
+  });
+
+  // 点击页面其他地方时取消“待确认”状态
+  document.addEventListener("pointerdown", (e) => {
+    if (!resetBtn.contains(e.target)) disarmReset();
+  }, true);
+  // ================= 收支对比侧边栏 =================
+  const LED_KEY = "ledgerV1";
+  const LED_OPEN_KEY = "ledgerOpenV1";
+  let led = [];
+  let ledType = 1; // 1=收入 0=支出
+  let ledClearArmed = false;
+  let ledArmTimer = null;
+
+  const ledEl = document.getElementById("ledger");
+  const ledBody = document.getElementById("ledBody");
+  const ledAmtEl = document.getElementById("ledAmt");
+  const ledNoteEl = document.getElementById("ledNote");
+  const ledSwitch = document.getElementById("ledSwitch");
+  const ledTypeBtns = ledSwitch.querySelectorAll("button");
+
+  function ledFmt(n) {
+    return "¥" + Number(n).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+  }
+
+  // 加载；首次使用给两条示例记录，方便立刻看到效果
+  function ledLoad() {
+    try {
+      const raw = localStorage.getItem(LED_KEY);
+      if (raw !== null) {
+        const a = JSON.parse(raw);
+        if (Array.isArray(a)) { led = a; return; }
+      }
+    } catch (e) { /* 忽略 */ }
+    led = [
+      { id: 1, t: 1, amt: 5000,  note: "工资" },
+      { id: 2, t: 1, amt: 1200,  note: "项目奖金" },
+      { id: 3, t: 0, amt: 1800,  note: "房租" },
+      { id: 4, t: 0, amt: 950,   note: "日常餐饮" },
+    ];
+    ledSave();
+  }
+  function ledSave() {
+    try { localStorage.setItem(LED_KEY, JSON.stringify(led)); } catch (e) { /* 忽略 */ }
+  }
+
+  function ledCell(rec, isIn) {
+    const td = document.createElement("td");
+    td.className = isIn ? "in" : "out";
+    if (!rec) { td.classList.add("empty"); td.textContent = "—"; return td; }
+    const amt = document.createElement("div");
+    amt.className = "amt";
+    amt.textContent = (isIn ? "+" : "-") + ledFmt(rec.amt);
+    td.appendChild(amt);
+    if (rec.note) {
+      const n = document.createElement("div");
+      n.className = "note";
+      n.textContent = rec.note;
+      td.appendChild(n);
+    }
+    const del = document.createElement("button");
+    del.className = "del";
+    del.title = "删除这条记录";
+    del.textContent = "✕";
+    del.addEventListener("click", () => {
+      led = led.filter((x) => x.id !== rec.id);
+      ledSave();
+      ledRender();
+    });
+    td.appendChild(del);
+    return td;
+  }
+
+  function ledRender() {
+    const sum = (f) => f.reduce((s, x) => s + x.amt, 0);
+    const ins = led.filter((x) => x.t === 1).sort((a, b) => a.id - b.id);
+    const outs = led.filter((x) => x.t === 0).sort((a, b) => a.id - b.id);
+    const tin = sum(ins), tout = sum(outs);
+    const N = Math.max(ins.length, outs.length);
+
+    // 两列表格：一行同时显示第 i 条收入与第 i 条支出
+    ledBody.innerHTML = "";
+    for (let i = 0; i < N; i++) {
+      const tr = document.createElement("tr");
+      tr.appendChild(ledCell(ins[i], true));
+      tr.appendChild(ledCell(outs[i], false));
+      ledBody.appendChild(tr);
+    }
+    const trT = document.createElement("tr");
+    trT.className = "totalrow";
+    const t1 = document.createElement("td");
+    const d1 = document.createElement("div");
+    d1.className = "amt"; d1.textContent = ledFmt(tin);
+    t1.appendChild(d1);
+    const t2 = document.createElement("td");
+    const d2 = document.createElement("div");
+    d2.className = "amt"; d2.textContent = ledFmt(tout);
+    t2.appendChild(d2);
+    trT.appendChild(t1); trT.appendChild(t2);
+    ledBody.appendChild(trT);
+
+    // 差距面板
+    const diff = tin - tout;
+    const diffEl = document.getElementById("ledDiff");
+    const badgeBox = document.getElementById("ledBadgeBox");
+    diffEl.className = "diff " + (diff > 0 ? "pos" : diff < 0 ? "neg" : "zero");
+    diffEl.textContent = diff === 0 ? "¥0" : (diff > 0 ? "+" : "-") + ledFmt(Math.abs(diff));
+    badgeBox.innerHTML = "";
+    const bd = document.createElement("span");
+    bd.className = "badge " + (diff > 0 ? "pos" : diff < 0 ? "neg" : "zero");
+    bd.textContent = diff > 0 ? "盈余" : diff < 0 ? "缺口" : "平衡";
+    badgeBox.appendChild(bd);
+
+    // 占比条（绿=收入占比 红=支出占比）
+    const barIn = document.getElementById("ledBarIn");
+    const barOut = document.getElementById("ledBarOut");
+    const g1 = Math.round(tin * 1000) + 1, g2 = Math.round(tout * 1000) + 1;
+    barIn.style.flexGrow = g1;
+    barOut.style.flexGrow = g2;
+    document.getElementById("ledInTotal").textContent = "收入 " + ledFmt(tin);
+    document.getElementById("ledOutTotal").textContent = "支出 " + ledFmt(tout);
+  }
+
+  // 收入/支出切换
+  ledTypeBtns.forEach((b) => {
+    b.addEventListener("click", () => {
+      ledTypeBtns.forEach((x) => x.classList.remove("on", "in", "out"));
+      b.classList.add("on", b.dataset.t === "1" ? "in" : "out");
+      ledType = Number(b.dataset.t);
+    });
+  });
+
+  // 记一笔
+  function ledAdd() {
+    const amt = parseFloat(ledAmtEl.value);
+    if (!isFinite(amt) || amt <= 0) {
+      ledAmtEl.style.borderColor = "#ef4444";
+      ledAmtEl.focus();
+      setTimeout(() => { ledAmtEl.style.borderColor = ""; }, 700);
+      return;
+    }
+    led.push({
+      id: Date.now() + Math.random(),
+      t: ledType,
+      amt: Math.round(amt * 100) / 100,
+      note: ledNoteEl.value.trim().slice(0, 14),
+    });
+    ledAmtEl.value = "";
+    ledNoteEl.value = "";
+    ledSave();
+    ledRender();
+    ledAmtEl.focus();
+  }
+  document.getElementById("ledGo").addEventListener("click", ledAdd);
+  ledAmtEl.addEventListener("keydown", (e) => { if (e.key === "Enter") ledAdd(); });
+
+  // 清空记录（点两下确认）
+  const ledClearBtn = document.getElementById("ledClear");
+  function ledDisarm() {
+    ledClearArmed = false;
+    ledClearBtn.classList.remove("armed");
+    ledClearBtn.textContent = "清空记录";
+    clearTimeout(ledArmTimer);
+  }
+  ledClearBtn.addEventListener("click", () => {
+    if (!ledClearArmed) {
+      ledClearArmed = true;
+      ledClearBtn.classList.add("armed");
+      ledClearBtn.textContent = "再点一次确认清空";
+      clearTimeout(ledArmTimer);
+      ledArmTimer = setTimeout(ledDisarm, 3000);
+      return;
+    }
+    led = [];
+    ledDisarm();
+    ledSave();
+    ledRender();
+  });
+
+  // 展开 / 收起（记住偏好）
+  function ledOpen(v) {
+    document.body.classList.toggle("ledger-open", v);
+    try { localStorage.setItem(LED_OPEN_KEY, v ? "1" : "0"); } catch (e) { /* 忽略 */ }
+  }
+  document.getElementById("ledClose").addEventListener("click", () => ledOpen(false));
+  document.getElementById("ledTab").addEventListener("click", () => ledOpen(true));
+  try {
+    if (localStorage.getItem(LED_OPEN_KEY) === "0") ledOpen(false);
+  } catch (e) { /* 忽略 */ }
+
+  ledLoad();
+  ledRender();
+</script>
+</body>
+</html>
