@@ -97,9 +97,6 @@
     window.dispatchEvent(new CustomEvent("taskmatrix:plugin-registered", {
       detail: { id: definition.id }
     }));
-    if (booted && getInstalled().includes(definition.id)) {
-      mount(definition.id).catch((err) => console.error("[plugins] mount failed:", err));
-    }
     return definition;
   }
 
