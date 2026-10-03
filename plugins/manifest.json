@@ -9,6 +9,51 @@
       "entry": "plugins/ledger.js",
       "version": "1.0.0",
       "category": "效率工具"
+    },
+    {
+      "id": "pomodoro",
+      "name": "番茄钟",
+      "description": "25/5 专注循环，可自定义专注与休息时长，并记录完成的专注次数。",
+      "icon": "🍅",
+      "entry": "plugins/pomodoro.js",
+      "version": "1.0.0",
+      "category": "专注"
+    },
+    {
+      "id": "notes",
+      "name": "速记便签",
+      "description": "快速记录零碎想法、临时信息和灵感，支持多张便签独立编辑。",
+      "icon": "📝",
+      "entry": "plugins/notes.js",
+      "version": "1.0.0",
+      "category": "记录"
+    },
+    {
+      "id": "habits",
+      "name": "习惯打卡",
+      "description": "建立每日习惯并完成打卡，查看连续天数和最近 7 天完成情况。",
+      "icon": "✅",
+      "entry": "plugins/habits.js",
+      "version": "1.0.0",
+      "category": "习惯"
+    },
+    {
+      "id": "countdown",
+      "name": "倒计时",
+      "description": "为考试、截止日期、旅行等重要事件建立多个实时倒计时。",
+      "icon": "⏳",
+      "entry": "plugins/countdown.js",
+      "version": "1.0.0",
+      "category": "时间"
+    },
+    {
+      "id": "task-stats",
+      "name": "任务统计",
+      "description": "统计四个象限中的任务数量，并快速查看各象限当前任务分布。",
+      "icon": "📊",
+      "entry": "plugins/task-stats.js",
+      "version": "1.0.0",
+      "category": "分析"
     }
   ]
 }
