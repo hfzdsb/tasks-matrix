@@ -372,6 +372,12 @@
   let topZ = 1, cur = null;
   const trashEl = document.getElementById("trash");
 
+  // 云同步状态提前初始化，保证本地启动阶段调用 saveState/ledSave 时不会触发 TDZ。
+  let sb = null;
+  let currentUser = null;
+  let cloudTimer = null;
+  let cloudApplying = false;
+
   // ---------- 示例任务与“添加方块”共用逻辑 ----------
   const PALETTE = ["#ef4444", "#f97316", "#ec4899", "#8b5cf6",
                    "#6366f1", "#14b8a6", "#22c55e", "#f59e0b"];
@@ -944,10 +950,6 @@
 
   // ================= 账号 / Supabase 跨设备同步 =================
   const cfg = window.TASKS_MATRIX_CONFIG || {};
-  let sb = null;
-  let currentUser = null;
-  let cloudTimer = null;
-  let cloudApplying = false;
   let lastViewportW = innerWidth;
   let lastViewportH = innerHeight;
 
