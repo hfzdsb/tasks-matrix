@@ -371,6 +371,7 @@
   <div class="ledtab" id="ledTab" title="打开收支对比"><span class="ic">📊</span><span>收 支</span></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
+<script src="plugin-runtime.js"></script>
 <script>
   const stage = document.getElementById("stage");
   const quads = document.querySelectorAll(".q");
@@ -1029,10 +1030,11 @@
     if (!sb || !currentUser || cloudApplying) return;
     setSyncState("busy");
     const payload = {
-      version: 2,
+      version: 3,
       tasks: collectState(),
       ledger: led,
-      ledgerOpen: document.body.classList.contains("ledger-open")
+      ledgerOpen: document.body.classList.contains("ledger-open"),
+      plugins: window.TaskMatrixPlugins?.getSnapshot?.() || null
     };
     const { error } = await sb.from("app_state").upsert({
       user_id: currentUser.id,
@@ -1081,6 +1083,9 @@
         ledRender();
       }
       if (typeof st.ledgerOpen === "boolean") ledOpen(st.ledgerOpen);
+      if (st.plugins && window.TaskMatrixPlugins?.restoreSnapshot) {
+        await window.TaskMatrixPlugins.restoreSnapshot(st.plugins, { silent: true });
+      }
       cloudApplying = false;
       showToast("已从云端同步");
       setSyncState("online");
@@ -1234,8 +1239,26 @@
     }, 160);
   });
 
+  async function initPlugins() {
+    if (!window.TaskMatrixPlugins) return;
+    try {
+      await window.TaskMatrixPlugins.boot({
+        toast: showToast,
+        requestSave: scheduleCloudSave,
+        getUser: () => currentUser,
+        getTasks: collectState
+      });
+    } catch (err) {
+      console.warn("插件系统初始化失败：", err);
+      showToast("插件系统初始化失败");
+    }
+  }
+
   refreshAuthUI();
-  initCloud();
+  (async () => {
+    await initPlugins();
+    await initCloud();
+  })();
 
 </script>
 </body>
