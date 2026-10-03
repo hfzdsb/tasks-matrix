@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tasks Matrix 管理后台</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0f172a;color:#e5e7eb;font-family:"Segoe UI","Microsoft YaHei",sans-serif}
+.wrap{max-width:1100px;margin:auto;padding:22px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:22px;margin:0}.muted{color:#94a3b8;font-size:13px}.card{margin-top:18px;background:#111827;border:1px solid #243041;border-radius:16px;padding:16px}
+button{border:0;border-radius:9px;padding:8px 12px;cursor:pointer;color:#fff;background:#334155;font:inherit;font-size:12px}
+button:hover{filter:brightness(1.1)}button.danger{background:#991b1b}button.warn{background:#92400e}button.good{background:#047857}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.status{margin-top:10px;min-height:18px;font-size:13px;color:#cbd5e1}
+.tablewrap{overflow:auto;margin-top:14px}table{width:100%;border-collapse:collapse;min-width:820px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid #243041;font-size:13px;vertical-align:top}th{color:#94a3b8}
+.badge{display:inline-block;padding:2px 7px;border-radius:999px;background:#1f2937;font-size:11px}.admin{background:#14532d}.banned{background:#7f1d1d}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.hidden{display:none!important}a{color:#a5b4fc;text-decoration:none}.notice{line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Tasks Matrix 管理后台</h1>
+      <div class="muted">管理员权限由服务器端验证，不在浏览器保存任何管理员密钥。</div>
+    </div>
+    <a href="./">← 返回任务页</a>
+  </div>
+
+  <div class="card" id="loginNotice">
+    <div class="notice">
+      请先在主页面登录管理员账号，再打开本页。<br>
+      <span class="muted">本页会复用同一浏览器中的 Supabase 登录会话。</span>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <a href="./"><button>返回主页面登录</button></a>
+      <button id="retryBtn">我已登录，重新检测</button>
+    </div>
+    <div class="status" id="noticeStatus"></div>
+  </div>
+
+  <div class="card hidden" id="adminCard">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <b id="who"></b>
+        <div class="muted">可查看账号状态、封禁/解封、清空云端数据、删除账号。</div>
+      </div>
+      <div class="row">
+        <button id="refreshBtn">刷新</button>
+        <button id="logoutBtn">退出登录</button>
+      </div>
+    </div>
+    <div class="status" id="adminStatus"></div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>邮箱</th><th>注册时间</th><th>最近登录</th><th>云端数据</th><th>状态</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+const cfg=window.TASKS_MATRIX_CONFIG||{};
+const sb=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY);
+const endpoint=cfg.SUPABASE_URL+"/functions/v1/admin-users";
+const loginNotice=document.getElementById("loginNotice");
+const adminCard=document.getElementById("adminCard");
+const noticeStatus=document.getElementById("noticeStatus");
+const adminStatus=document.getElementById("adminStatus");
+const tbody=document.getElementById("tbody");
+const who=document.getElementById("who");
+let session=null;
+
+const fmt=v=>v?new Date(v).toLocaleString("zh-CN"):"—";
+
+async function api(method="GET",body){
+  if(!session) throw new Error("未登录");
+  const headers={
+    "Authorization":"Bearer "+session.access_token,
+    "apikey":cfg.SUPABASE_ANON_KEY
+  };
+  if(body) headers["Content-Type"]="application/json";
+  const r=await fetch(endpoint,{method,headers,body:body?JSON.stringify(body):undefined});
+  const data=await r.json().catch(()=>({error:"服务器返回格式异常"}));
+  if(!r.ok) throw new Error(data.error||("HTTP "+r.status));
+  return data;
+}
+
+function cell(text){
+  const td=document.createElement("td");
+  td.textContent=text;
+  return td;
+}
+
+function makeButton(label,action,id,cls){
+  const b=document.createElement("button");
+  b.textContent=label;
+  b.dataset.action=action;
+  b.dataset.id=id;
+  if(cls) b.className=cls;
+  return b;
+}
+
+async function loadUsers(){
+  adminStatus.textContent="正在加载…";
+  try{
+    const data=await api();
+    tbody.textContent="";
+    for(const u of data.users){
+      const tr=document.createElement("tr");
+
+      const emailTd=cell(u.email||"(无邮箱)");
+      if(u.is_admin){
+        const badge=document.createElement("span");
+        badge.className="badge admin";
+        badge.textContent="管理员";
+        emailTd.append(" ",badge);
+      }
+      tr.appendChild(emailTd);
+      tr.appendChild(cell(fmt(u.created_at)));
+      tr.appendChild(cell(fmt(u.last_sign_in_at)));
+      tr.appendChild(cell(u.state_updated_at?"有 · "+fmt(u.state_updated_at):"无"));
+
+      const banned=!!(u.banned_until&&new Date(u.banned_until)>new Date());
+      const statusTd=document.createElement("td");
+      const badge=document.createElement("span");
+      badge.className="badge"+(banned?" banned":"");
+      badge.textContent=banned?"已封禁":"正常";
+      statusTd.appendChild(badge);
+      tr.appendChild(statusTd);
+
+      const actionsTd=document.createElement("td");
+      const actions=document.createElement("div");
+      actions.className="actions";
+      if(!u.is_admin){
+        actions.appendChild(
+          banned?makeButton("解封","unban",u.id,"good"):makeButton("封禁","ban",u.id,"warn")
+        );
+      }
+      actions.appendChild(makeButton("清空数据","clear_state",u.id,""));
+      if(!u.is_admin) actions.appendChild(makeButton("删除账号","delete",u.id,"danger"));
+      actionsTd.appendChild(actions);
+      tr.appendChild(actionsTd);
+
+      tbody.appendChild(tr);
+    }
+    adminStatus.textContent="共 "+data.users.length+" 个账号";
+  }catch(e){
+    adminStatus.textContent="加载失败："+e.message;
+    if(/Unauthorized|Forbidden|未登录/i.test(e.message)){
+      adminCard.classList.add("hidden");
+      loginNotice.classList.remove("hidden");
+      noticeStatus.textContent=e.message==="Forbidden"?"当前账号不是管理员。":"请先登录管理员账号。";
+    }
+  }
+}
+
+async function detect(){
+  noticeStatus.textContent="正在检测登录状态…";
+  const {data,error}=await sb.auth.getSession();
+  if(error||!data.session){
+    session=null;
+    noticeStatus.textContent="当前没有登录会话。";
+    return;
+  }
+  session=data.session;
+  who.textContent="管理员："+(session.user.email||session.user.id);
+  loginNotice.classList.add("hidden");
+  adminCard.classList.remove("hidden");
+  await loadUsers();
+}
+
+document.getElementById("retryBtn").addEventListener("click",detect);
+document.getElementById("refreshBtn").addEventListener("click",loadUsers);
+document.getElementById("logoutBtn").addEventListener("click",async()=>{
+  await sb.auth.signOut();
+  session=null;
+  adminCard.classList.add("hidden");
+  loginNotice.classList.remove("hidden");
+  noticeStatus.textContent="已退出登录。";
+});
+
+tbody.addEventListener("click",async e=>{
+  const b=e.target.closest("button[data-action]");
+  if(!b)return;
+  const labels={ban:"封禁该账号",unban:"解封该账号",clear_state:"清空该账号的全部云端任务和收支数据",delete:"永久删除该账号"};
+  if(!confirm("确认要"+labels[b.dataset.action]+"吗？"))return;
+  b.disabled=true;
+  adminStatus.textContent="正在执行…";
+  try{
+    await api("POST",{action:b.dataset.action,user_id:b.dataset.id});
+    await loadUsers();
+  }catch(err){
+    adminStatus.textContent="操作失败："+err.message;
+  }finally{
+    b.disabled=false;
+  }
+});
+
+detect();
+</script>
+</body>
+</html>
