@@ -45,7 +45,7 @@
   .box { position: absolute; display: flex; align-items: center; justify-content: center;
          border-radius: 22px; cursor: grab; text-align: center; line-height: 1.35; color: #fff;
          box-shadow: 0 10px 24px rgba(0,0,0,.35);
-         transition: box-shadow .15s ease, transform .1s ease; will-change: left, top; }
+         transition: box-shadow .15s ease, transform .1s ease; will-change: translate; }
   .box:hover  { box-shadow: 0 14px 30px rgba(0,0,0,.45); }
   .box:active { cursor: grabbing; transform: scale(1.05);
                 box-shadow: 0 18px 36px rgba(0,0,0,.55); }
@@ -213,6 +213,14 @@
   .ledtab .ic { writing-mode: horizontal-tb; font-size: 15px; }
   .ledtab:hover { color: #c7d2fe; border-color: #818cf8; }
   body.ledger-open .ledtab { display: none; }
+
+  /* 低性能/触控设备：减少大面积模糊与滤镜重绘 */
+  @media (hover: none), (pointer: coarse) {
+    .pill, .rbtn, .ledtab { backdrop-filter: none; }
+    .ledger { backdrop-filter: none; }
+    .q.active { filter: none; }
+  }
+
 </style>
 </head>
 <body class="ledger-open">
@@ -499,6 +507,7 @@
     return (cx >= innerWidth / 2 ? 1 : 0) + (cy >= innerHeight / 2 ? 2 : 0);
   }
   function markQuad(i) {
+    if (i === cur) return;
     if (cur !== null) quads[cur].classList.remove("active");
     cur = i;
     if (i !== null) quads[i].classList.add("active");
@@ -516,37 +525,74 @@
   stage.addEventListener("pointerdown", (e) => {
     const box = e.target.closest(".box");
     if (!box) return;
-    box.setPointerCapture(e.pointerId);
-    const r = box.getBoundingClientRect();
-    const ox = e.clientX - r.left, oy = e.clientY - r.top;
-    box.style.zIndex = ++topZ;
-    markQuad(quadIndex(r.left + r.width / 2, r.top + r.height / 2));
 
-    // 是否已进入垃圾桶区域（开始拖动时缓存其位置）
-    const tr = trashEl.getBoundingClientRect();
-    const overTrash = (x, y) =>
-      x + box.offsetWidth >= tr.left && x <= tr.right &&
-      y + box.offsetHeight >= tr.top && y <= tr.bottom;
+    box.setPointerCapture(e.pointerId);
+
+    const r = box.getBoundingClientRect();
+    const bw = r.width;
+    const bh = r.height;
+    const viewportW = innerWidth;
+    const viewportH = innerHeight;
+    const startX = r.left;
+    const startY = r.top;
+    const ox = e.clientX - r.left;
+    const oy = e.clientY - r.top;
+
+    let x = startX;
+    let y = startY;
+    let nextX = x;
+    let nextY = y;
+    let raf = 0;
     let drop = false;
 
-    const onMove = (ev) => {
-      let x = ev.clientX - ox;
-      let y = ev.clientY - oy;
-      x = Math.max(0, Math.min(x, innerWidth - box.offsetWidth));
-      y = Math.max(0, Math.min(y, innerHeight - box.offsetHeight));
-      box.style.left = x + "px";
-      box.style.top = y + "px";
+    box.style.zIndex = ++topZ;
+    markQuad(quadIndex(startX + bw / 2, startY + bh / 2));
+
+    // 缓存垃圾桶位置，拖动期间不重复读取布局
+    const tr = trashEl.getBoundingClientRect();
+    const overTrash = (px, py) =>
+      px + bw >= tr.left && px <= tr.right &&
+      py + bh >= tr.top && py <= tr.bottom;
+
+    const paintMove = () => {
+      raf = 0;
+      x = nextX;
+      y = nextY;
+
+      // translate 通常可由合成线程处理，避免每帧改 left/top 触发布局
+      box.style.translate = (x - startX) + "px " + (y - startY) + "px";
+
       drop = overTrash(x, y);
       trashEl.classList.toggle("hot", drop);
+
       if (drop) {
-        markQuad(null);            // 悬停在垃圾桶上时不高亮象限
+        markQuad(null);
       } else {
-        markQuad(quadIndex(x + box.offsetWidth / 2, y + box.offsetHeight / 2));
+        markQuad(quadIndex(x + bw / 2, y + bh / 2));
       }
     };
 
+    const onMove = (ev) => {
+      nextX = Math.max(0, Math.min(ev.clientX - ox, viewportW - bw));
+      nextY = Math.max(0, Math.min(ev.clientY - oy, viewportH - bh));
+
+      // 一帧最多执行一次 DOM 写入，避免高频 pointermove 淹没渲染线程
+      if (!raf) raf = requestAnimationFrame(paintMove);
+    };
+
     const onUp = () => {
+      if (raf) {
+        cancelAnimationFrame(raf);
+        paintMove();
+      }
+
       trashEl.classList.remove("hot");
+
+      // 只在拖动结束时把最终位置提交到 left/top，保证存档格式不变
+      box.style.translate = "";
+      box.style.left = x + "px";
+      box.style.top = y + "px";
+
       if (drop) {
         // 扔进垃圾桶：缩小旋转消失后移除
         const lab = box.querySelector(".label");
@@ -561,18 +607,17 @@
         ).onfinish = () => { box.remove(); saveState(); };
         showToast("已删除：「" + nm + "」");
       } else {
-        const i = quadIndex(
-          parseFloat(box.style.left) + box.offsetWidth / 2,
-          parseFloat(box.style.top) + box.offsetHeight / 2
-        );
+        const i = quadIndex(x + bw / 2, y + bh / 2);
         showToast("已放入：「" + NAMES[i] + "」");
         markQuad(null);
         saveState();
       }
+
       box.removeEventListener("pointermove", onMove);
       box.removeEventListener("pointerup", onUp);
       box.removeEventListener("pointercancel", onUp);
     };
+
     box.addEventListener("pointermove", onMove);
     box.addEventListener("pointerup", onUp);
     box.addEventListener("pointercancel", onUp);
@@ -685,20 +730,35 @@
   }
 
   function ledRender() {
-    const sum = (f) => f.reduce((s, x) => s + x.amt, 0);
-    const ins = led.filter((x) => x.t === 1).sort((a, b) => a.id - b.id);
-    const outs = led.filter((x) => x.t === 0).sort((a, b) => a.id - b.id);
-    const tin = sum(ins), tout = sum(outs);
+    const ins = [];
+    const outs = [];
+    let tin = 0;
+    let tout = 0;
+
+    // 单次遍历完成分类和汇总；记录本身按添加顺序已递增，无需每次排序
+    for (const item of led) {
+      if (item.t === 1) {
+        ins.push(item);
+        tin += item.amt;
+      } else {
+        outs.push(item);
+        tout += item.amt;
+      }
+    }
+
     const N = Math.max(ins.length, outs.length);
 
-    // 两列表格：一行同时显示第 i 条收入与第 i 条支出
-    ledBody.innerHTML = "";
+    // 先在内存中组装，再一次性挂载，减少反复触碰真实 DOM
+    const frag = document.createDocumentFragment();
     for (let i = 0; i < N; i++) {
       const tr = document.createElement("tr");
       tr.appendChild(ledCell(ins[i], true));
       tr.appendChild(ledCell(outs[i], false));
-      ledBody.appendChild(tr);
+      frag.appendChild(tr);
     }
+
+    ledBody.innerHTML = "";
+    ledBody.appendChild(frag);
     const trT = document.createElement("tr");
     trT.className = "totalrow";
     const t1 = document.createElement("td");
