@@ -1,0 +1,20 @@
+(() => {
+  "use strict";
+
+  // 复制本文件并改名，例如 plugins/my-tool.js。
+  // 然后在 plugins/manifest.json 中添加对应条目即可。
+  window.TaskMatrixPlugins.register({
+    id: "plugin-template",
+
+    async mount(api) {
+      // const state = api.storage.get({});
+      // api.storage.set({ ...state, example: true });
+      // api.host.toast("插件已启动");
+
+      // 如果插件创建了 DOM、定时器或事件监听器，请在返回的清理函数中释放。
+      return () => {
+        // cleanup
+      };
+    },
+  });
+})();
