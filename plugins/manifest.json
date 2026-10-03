@@ -8,7 +8,52 @@
       "icon": "📒",
       "entry": "plugins/ledger.js",
       "version": "1.0.0",
-      "category": "效率工具"
+      "category": "生活"
+    },
+    {
+      "id": "pomodoro",
+      "name": "番茄钟",
+      "description": "25/5、50/10、90/20 三组专注节奏，支持暂停、重置和累计专注轮次。",
+      "icon": "🍅",
+      "entry": "plugins/pomodoro.js",
+      "version": "1.0.0",
+      "category": "专注"
+    },
+    {
+      "id": "notes",
+      "name": "速记便签",
+      "description": "快速记录临时想法、链接和待处理信息，不打断当前任务。",
+      "icon": "🗒️",
+      "entry": "plugins/notes.js",
+      "version": "1.0.0",
+      "category": "记录"
+    },
+    {
+      "id": "habits",
+      "name": "习惯打卡",
+      "description": "创建每日习惯、完成今日打卡，并查看当前连续坚持天数。",
+      "icon": "✅",
+      "entry": "plugins/habits.js",
+      "version": "1.0.0",
+      "category": "习惯"
+    },
+    {
+      "id": "countdown",
+      "name": "倒计时",
+      "description": "为考试、截止日期、旅行和纪念日创建精确到秒的倒计时。",
+      "icon": "⏳",
+      "entry": "plugins/countdown.js",
+      "version": "1.0.0",
+      "category": "时间"
+    },
+    {
+      "id": "quadrant-insights",
+      "name": "四象限统计",
+      "description": "统计四个象限的任务分布，并从重要任务中随机挑选下一项。",
+      "icon": "📊",
+      "entry": "plugins/quadrant-insights.js",
+      "version": "1.0.0",
+      "category": "分析"
     }
   ]
 }
