@@ -277,6 +277,12 @@
       <p id="authHint">登录后，你的任务布局和收支记录会同步到其他设备。</p>
       <input id="authEmail" type="email" placeholder="邮箱" autocomplete="email" />
       <input id="authPassword" type="password" placeholder="密码（至少 6 位）" autocomplete="current-password" />
+      <div id="passwordChangeBox" style="display:none">
+        <input id="currentPassword" type="password" placeholder="当前密码" autocomplete="current-password" />
+        <input id="newPassword" type="password" placeholder="新密码（至少 8 位）" autocomplete="new-password" />
+        <input id="confirmPassword" type="password" placeholder="再次输入新密码" autocomplete="new-password" />
+        <button class="auth-register" id="changePasswordBtn" type="button" style="width:100%;margin-top:2px">修改密码</button>
+      </div>
       <div class="auth-actions" id="authActions">
         <button class="auth-login" id="loginBtn" type="button">登录</button>
         <button class="auth-register" id="registerBtn" type="button">注册</button>
@@ -959,6 +965,11 @@
   const authClose = document.getElementById("authClose");
   const authEmail = document.getElementById("authEmail");
   const authPassword = document.getElementById("authPassword");
+  const passwordChangeBox = document.getElementById("passwordChangeBox");
+  const currentPassword = document.getElementById("currentPassword");
+  const newPassword = document.getElementById("newPassword");
+  const confirmPassword = document.getElementById("confirmPassword");
+  const changePasswordBtn = document.getElementById("changePasswordBtn");
   const authMsg = document.getElementById("authMsg");
   const loginBtn = document.getElementById("loginBtn");
   const registerBtn = document.getElementById("registerBtn");
@@ -983,6 +994,9 @@
       accountBtn.classList.add("auth-user");
       authActions.style.display = "none";
       logoutBtn.style.display = "block";
+      passwordChangeBox.style.display = "block";
+      authEmail.style.display = "none";
+      authPassword.style.display = "none";
       authHint.textContent = "已登录。当前布局会自动同步到你的其他设备。";
       setSyncState("online");
     } else {
@@ -990,6 +1004,9 @@
       accountBtn.textContent = isCloudConfigured() ? "登录 / 注册" : "本机模式";
       authActions.style.display = "grid";
       logoutBtn.style.display = "none";
+      passwordChangeBox.style.display = "none";
+      authEmail.style.display = "";
+      authPassword.style.display = "";
       authHint.textContent = isCloudConfigured()
         ? "登录后，你的任务布局和收支记录会同步到其他设备。"
         : "Supabase 尚未配置。当前仍可使用本机存储。";
@@ -1141,6 +1158,47 @@
     } else {
       authMsg.textContent = "注册成功。请检查邮箱完成验证，然后回来登录。";
     }
+  });
+
+  changePasswordBtn.addEventListener("click", async () => {
+    if (!sb || !currentUser) return;
+    const oldPw = currentPassword.value;
+    const nextPw = newPassword.value;
+    const confirmPw = confirmPassword.value;
+    if (!oldPw || nextPw.length < 8) {
+      authMsg.textContent = "请输入当前密码，新密码至少 8 位。";
+      return;
+    }
+    if (nextPw !== confirmPw) {
+      authMsg.textContent = "两次输入的新密码不一致。";
+      return;
+    }
+    if (oldPw === nextPw) {
+      authMsg.textContent = "新密码不能与当前密码相同。";
+      return;
+    }
+    authMsg.textContent = "正在验证当前密码…";
+    const email = currentUser.email;
+    if (!email) {
+      authMsg.textContent = "当前账号没有邮箱，无法使用密码修改功能。";
+      return;
+    }
+    const { error: verifyError } = await sb.auth.signInWithPassword({ email, password: oldPw });
+    if (verifyError) {
+      authMsg.textContent = "当前密码不正确。";
+      return;
+    }
+    authMsg.textContent = "正在修改密码…";
+    const { error } = await sb.auth.updateUser({ password: nextPw });
+    if (error) {
+      authMsg.textContent = "修改失败：" + error.message;
+      return;
+    }
+    currentPassword.value = "";
+    newPassword.value = "";
+    confirmPassword.value = "";
+    authMsg.textContent = "密码修改成功。";
+    showToast("密码修改成功");
   });
 
   logoutBtn.addEventListener("click", async () => {
