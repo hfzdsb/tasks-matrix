@@ -214,6 +214,34 @@
   .ledtab:hover { color: #c7d2fe; border-color: #818cf8; }
   body.ledger-open .ledtab { display: none; }
 
+
+  /* ---------- 账号与同步 ---------- */
+  .account { position: fixed; left: 18px; top: 14px; z-index: 18; display: flex; align-items: center; gap: 8px; }
+  .account button { border: 1px solid rgba(255,255,255,.16); background: rgba(15,23,42,.78); color: rgba(255,255,255,.9);
+                    border-radius: 999px; padding: 8px 13px; cursor: pointer; font-family: inherit; font-size: 12px; }
+  .account button:hover { border-color: #818cf8; color: #fff; }
+  .syncdot { width: 8px; height: 8px; border-radius: 50%; background: #64748b; box-shadow: 0 0 8px rgba(100,116,139,.55); }
+  .syncdot.online { background: #22c55e; box-shadow: 0 0 9px rgba(34,197,94,.7); }
+  .syncdot.busy { background: #f59e0b; box-shadow: 0 0 9px rgba(245,158,11,.7); }
+  .auth-overlay { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center;
+                  background: rgba(2,6,23,.72); backdrop-filter: blur(5px); }
+  .auth-overlay.open { display: flex; }
+  .auth-card { width: min(92vw, 390px); background: #111827; border: 1px solid rgba(255,255,255,.12);
+               border-radius: 20px; padding: 22px; box-shadow: 0 24px 70px rgba(0,0,0,.55); }
+  .auth-card h2 { color: #fff; font-size: 19px; margin-bottom: 5px; }
+  .auth-card p { color: rgba(255,255,255,.52); font-size: 12px; margin-bottom: 16px; line-height: 1.5; }
+  .auth-card input { width: 100%; margin-bottom: 10px; padding: 11px 13px; border-radius: 10px; border: 1px solid #334155;
+                     background: #0b1220; color: #fff; outline: none; font-size: 14px; }
+  .auth-card input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(99,102,241,.24); }
+  .auth-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 5px; }
+  .auth-actions button, .auth-logout { border: none; border-radius: 10px; padding: 10px 12px; cursor: pointer; color: #fff; font-family: inherit; }
+  .auth-login { background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+  .auth-register { background: #334155; }
+  .auth-logout { width: 100%; margin-top: 10px; background: #7f1d1d; }
+  .auth-msg { min-height: 18px; margin-top: 10px; font-size: 12px; color: #fca5a5; }
+  .auth-close { float: right; background: none; border: none; color: rgba(255,255,255,.65); font-size: 20px; cursor: pointer; }
+  .auth-user { color: #a7f3d0 !important; }
+
   /* 低性能/触控设备：减少大面积模糊与滤镜重绘 */
   @media (hover: none), (pointer: coarse) {
     .pill, .rbtn, .ledtab { backdrop-filter: none; }
@@ -236,8 +264,30 @@
     <span class="tag"><span class="chip c4">4</span><span><b>不重要且不紧急</b><i>减少或删除</i></span></span></div>
   <div id="cross"></div>
 
+
+  <div class="account">
+    <span class="syncdot" id="syncDot"></span>
+    <button id="accountBtn" type="button">本机模式</button>
+  </div>
+
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-card">
+      <button class="auth-close" id="authClose" type="button">×</button>
+      <h2>账号与跨设备同步</h2>
+      <p id="authHint">登录后，你的任务布局和收支记录会同步到其他设备。</p>
+      <input id="authEmail" type="email" placeholder="邮箱" autocomplete="email" />
+      <input id="authPassword" type="password" placeholder="密码（至少 6 位）" autocomplete="current-password" />
+      <div class="auth-actions" id="authActions">
+        <button class="auth-login" id="loginBtn" type="button">登录</button>
+        <button class="auth-register" id="registerBtn" type="button">注册</button>
+      </div>
+      <button class="auth-logout" id="logoutBtn" type="button" style="display:none">退出登录</button>
+      <div class="auth-msg" id="authMsg"></div>
+    </div>
+  </div>
+
   <div id="stage"></div>
-  <div class="pill" id="hint">按住任务方块拖到合适的象限，拖进左下角垃圾桶可删除 🖐</div>
+  <div class="pill" id="hint">拖动任务到合适象限；登录后可跨设备同步 🖐</div>
   <div class="pill" id="toast"></div>
   <div class="pill" id="legend">横轴 = 紧急性（左：紧急 → 右：不紧急）　纵轴 = 重要性（上：重要 → 下：不重要）</div>
 
@@ -313,12 +363,20 @@
 
   <!-- 收起侧边栏后的竖排开合标签 -->
   <div class="ledtab" id="ledTab" title="打开收支对比"><span class="ic">📊</span><span>收 支</span></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <script>
   const stage = document.getElementById("stage");
   const quads = document.querySelectorAll(".q");
   const NAMES = ["重要且紧急", "重要不紧急", "不重要但紧急", "不重要且不紧急"];
   let topZ = 1, cur = null;
   const trashEl = document.getElementById("trash");
+
+  // 云同步状态提前初始化，保证本地启动阶段调用 saveState/ledSave 时不会触发 TDZ。
+  let sb = null;
+  let currentUser = null;
+  let cloudTimer = null;
+  let cloudApplying = false;
 
   // ---------- 示例任务与“添加方块”共用逻辑 ----------
   const PALETTE = ["#ef4444", "#f97316", "#ec4899", "#8b5cf6",
@@ -329,7 +387,7 @@
     const box = document.createElement("div");
     box.className = "box";
     // 传了合法大小就用它（恢复存档），否则随机 130~180
-    const size = s && s >= 90 && s <= 250 ? s : 130 + Math.floor(Math.random() * 50);
+    const size = s && s >= 72 && s <= 250 ? s : Math.max(84, Math.min(160, 110 + Math.floor(Math.random() * 42)));
     box.style.width = box.style.height = size + "px";
     box.style.background = "linear-gradient(135deg, " + color + ", " + color + "88)";
     const label = document.createElement("span");
@@ -391,21 +449,59 @@
   const SAVE_KEY = "matrixTasksV1";
   let saveWarned = false;
 
-  // 收集所有方块：名称、颜色、位置、大小、层级
+  // 收集所有方块：用归一化坐标保存，保证不同分辨率设备上的相对布局一致
   function collectState() {
+    const minDim = Math.max(1, Math.min(innerWidth, innerHeight));
     return Array.prototype.slice.call(stage.querySelectorAll(".box")).map((b, i) => {
       const label = b.querySelector(".label");
       const m = (b.style.background || "").match(/#[0-9a-fA-F]{6}/);
       const z = parseInt(b.style.zIndex, 10);
+      const s = b.offsetWidth;
+      const x = parseFloat(b.style.left) || 0;
+      const y = parseFloat(b.style.top) || 0;
+      const maxX = Math.max(1, innerWidth - s);
+      const maxY = Math.max(1, innerHeight - s);
       return {
         t: label ? label.textContent : "",
         c: m ? m[0] : "#6366f1",
-        x: parseFloat(b.style.left) || 0,
-        y: parseFloat(b.style.top) || 0,
-        s: b.offsetWidth,
+        nx: Math.max(0, Math.min(1, x / maxX)),
+        ny: Math.max(0, Math.min(1, y / maxY)),
+        sr: s / minDim,
         z: isNaN(z) ? i : z,
       };
     });
+  }
+
+  function restoreTaskArray(arr) {
+    if (!Array.isArray(arr)) return null;
+    stage.innerHTML = "";
+    topZ = 1;
+    const minDim = Math.max(1, Math.min(innerWidth, innerHeight));
+    arr.forEach((it) => {
+      const size = Number.isFinite(Number(it.sr))
+        ? Math.max(72, Math.min(180, Number(it.sr) * minDim))
+        : Number(it.s);
+      const safeSize = Number.isFinite(size) ? size : 110;
+      const x = Number.isFinite(Number(it.nx))
+        ? Number(it.nx) * Math.max(1, innerWidth - safeSize)
+        : Number(it.x);
+      const y = Number.isFinite(Number(it.ny))
+        ? Number(it.ny) * Math.max(1, innerHeight - safeSize)
+        : Number(it.y);
+      const b = addBox(
+        it.t || "",
+        /^#[0-9a-fA-F]{6}$/.test(it.c) ? it.c : "#6366f1",
+        Number.isFinite(x) ? x : undefined,
+        Number.isFinite(y) ? y : undefined,
+        safeSize
+      );
+      const z = parseInt(it.z, 10);
+      if (!isNaN(z)) {
+        b.style.zIndex = z;
+        if (z >= topZ) topZ = z + 1;
+      }
+    });
+    return arr.length;
   }
 
   function saveState() {
@@ -418,6 +514,7 @@
         showToast("当前浏览器不允许本地保存");
       }
     }
+    scheduleCloudSave();
   }
 
   // 返回恢复的数量；没有存档或存档损坏返回 null
@@ -425,21 +522,7 @@
     try {
       const raw = localStorage.getItem(SAVE_KEY);
       if (raw === null) return null;
-      const arr = JSON.parse(raw);
-      if (!Array.isArray(arr)) return null;
-      arr.forEach((it) => {
-        const b = addBox(
-          it.t || "",
-          /^#[0-9a-fA-F]{6}$/.test(it.c) ? it.c : "#6366f1",
-          Number(it.x), Number(it.y), Number(it.s)
-        );
-        const z = parseInt(it.z, 10);
-        if (!isNaN(z)) {
-          b.style.zIndex = z;
-          if (z >= topZ) topZ = z + 1;
-        }
-      });
-      return arr.length;
+      return restoreTaskArray(JSON.parse(raw));
     } catch (err) {
       console.warn("恢复失败：", err);
       return null;
@@ -700,6 +783,7 @@
   }
   function ledSave() {
     try { localStorage.setItem(LED_KEY, JSON.stringify(led)); } catch (e) { /* 忽略 */ }
+    scheduleCloudSave();
   }
 
   function ledCell(rec, isIn) {
@@ -863,6 +947,238 @@
 
   ledLoad();
   ledRender();
+
+  // ================= 账号 / Supabase 跨设备同步 =================
+  const cfg = window.TASKS_MATRIX_CONFIG || {};
+  let lastViewportW = innerWidth;
+  let lastViewportH = innerHeight;
+
+  const accountBtn = document.getElementById("accountBtn");
+  const syncDot = document.getElementById("syncDot");
+  const authOverlay = document.getElementById("authOverlay");
+  const authClose = document.getElementById("authClose");
+  const authEmail = document.getElementById("authEmail");
+  const authPassword = document.getElementById("authPassword");
+  const authMsg = document.getElementById("authMsg");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const authActions = document.getElementById("authActions");
+  const authHint = document.getElementById("authHint");
+
+  function isCloudConfigured() {
+    return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY &&
+      window.supabase && typeof window.supabase.createClient === "function");
+  }
+
+  function setSyncState(state) {
+    syncDot.classList.remove("online", "busy");
+    if (state === "online") syncDot.classList.add("online");
+    if (state === "busy") syncDot.classList.add("busy");
+  }
+
+  function refreshAuthUI() {
+    if (currentUser) {
+      accountBtn.textContent = currentUser.email || "已登录";
+      accountBtn.classList.add("auth-user");
+      authActions.style.display = "none";
+      logoutBtn.style.display = "block";
+      authHint.textContent = "已登录。当前布局会自动同步到你的其他设备。";
+      setSyncState("online");
+    } else {
+      accountBtn.classList.remove("auth-user");
+      accountBtn.textContent = isCloudConfigured() ? "登录 / 注册" : "本机模式";
+      authActions.style.display = "grid";
+      logoutBtn.style.display = "none";
+      authHint.textContent = isCloudConfigured()
+        ? "登录后，你的任务布局和收支记录会同步到其他设备。"
+        : "Supabase 尚未配置。当前仍可使用本机存储。";
+      setSyncState("");
+    }
+  }
+
+  function openAuth() {
+    authMsg.textContent = "";
+    authOverlay.classList.add("open");
+    if (!currentUser) setTimeout(() => authEmail.focus(), 0);
+  }
+  function closeAuth() { authOverlay.classList.remove("open"); }
+
+  accountBtn.addEventListener("click", openAuth);
+  authClose.addEventListener("click", closeAuth);
+  authOverlay.addEventListener("pointerdown", (e) => { if (e.target === authOverlay) closeAuth(); });
+
+  async function cloudSaveNow() {
+    if (!sb || !currentUser || cloudApplying) return;
+    setSyncState("busy");
+    const payload = {
+      version: 2,
+      tasks: collectState(),
+      ledger: led,
+      ledgerOpen: document.body.classList.contains("ledger-open")
+    };
+    const { error } = await sb.from("app_state").upsert({
+      user_id: currentUser.id,
+      state: payload,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "user_id" });
+    if (error) {
+      console.warn("云端保存失败：", error);
+      setSyncState("");
+    } else {
+      setSyncState("online");
+    }
+  }
+
+  function scheduleCloudSave() {
+    if (!sb || !currentUser || cloudApplying) return;
+    clearTimeout(cloudTimer);
+    cloudTimer = setTimeout(cloudSaveNow, 450);
+  }
+
+  async function loadCloudState() {
+    if (!sb || !currentUser) return;
+    setSyncState("busy");
+    const { data, error } = await sb.from("app_state")
+      .select("state")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+
+    if (error) {
+      console.warn("云端读取失败：", error);
+      authMsg.textContent = "云端读取失败：" + error.message;
+      setSyncState("");
+      return;
+    }
+
+    if (data && data.state) {
+      cloudApplying = true;
+      const st = data.state || {};
+      if (Array.isArray(st.tasks)) {
+        restoreTaskArray(st.tasks);
+        try { localStorage.setItem(SAVE_KEY, JSON.stringify(st.tasks)); } catch (e) {}
+      }
+      if (Array.isArray(st.ledger)) {
+        led = st.ledger;
+        try { localStorage.setItem(LED_KEY, JSON.stringify(led)); } catch (e) {}
+        ledRender();
+      }
+      if (typeof st.ledgerOpen === "boolean") ledOpen(st.ledgerOpen);
+      cloudApplying = false;
+      showToast("已从云端同步");
+      setSyncState("online");
+    } else {
+      // 首次登录：把当前本机数据迁移到云端
+      await cloudSaveNow();
+      showToast("已创建云端存档");
+    }
+  }
+
+  async function initCloud() {
+    if (!isCloudConfigured()) {
+      refreshAuthUI();
+      return;
+    }
+    try {
+      sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+      const { data } = await sb.auth.getSession();
+      currentUser = data.session ? data.session.user : null;
+      refreshAuthUI();
+      if (currentUser) await loadCloudState();
+
+      sb.auth.onAuthStateChange((_event, session) => {
+        const nextUser = session ? session.user : null;
+        const changed = (currentUser && nextUser && currentUser.id !== nextUser.id) ||
+                        (!!currentUser !== !!nextUser);
+        currentUser = nextUser;
+        refreshAuthUI();
+        if (changed && currentUser) setTimeout(loadCloudState, 0);
+      });
+    } catch (err) {
+      console.warn("Supabase 初始化失败：", err);
+      authMsg.textContent = "同步服务初始化失败，将继续使用本机模式。";
+      sb = null;
+      currentUser = null;
+      refreshAuthUI();
+    }
+  }
+
+  loginBtn.addEventListener("click", async () => {
+    if (!sb) { authMsg.textContent = "请先在 config.js 中配置 Supabase。"; return; }
+    const email = authEmail.value.trim();
+    const password = authPassword.value;
+    if (!email || !password) { authMsg.textContent = "请输入邮箱和密码。"; return; }
+    authMsg.textContent = "正在登录…";
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { authMsg.textContent = error.message; return; }
+    currentUser = data.user;
+    refreshAuthUI();
+    await loadCloudState();
+    authMsg.textContent = "";
+    closeAuth();
+  });
+
+  registerBtn.addEventListener("click", async () => {
+    if (!sb) { authMsg.textContent = "请先在 config.js 中配置 Supabase。"; return; }
+    const email = authEmail.value.trim();
+    const password = authPassword.value;
+    if (!email || password.length < 6) {
+      authMsg.textContent = "请输入有效邮箱，密码至少 6 位。";
+      return;
+    }
+    authMsg.textContent = "正在注册…";
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: location.origin + location.pathname }
+    });
+    if (error) { authMsg.textContent = error.message; return; }
+    if (data.session) {
+      currentUser = data.user;
+      refreshAuthUI();
+      await cloudSaveNow();
+      closeAuth();
+    } else {
+      authMsg.textContent = "注册成功。请检查邮箱完成验证，然后回来登录。";
+    }
+  });
+
+  logoutBtn.addEventListener("click", async () => {
+    if (sb) await sb.auth.signOut();
+    currentUser = null;
+    refreshAuthUI();
+    authMsg.textContent = "已退出登录。本机数据仍保留。";
+  });
+
+  // 视口尺寸改变时，按归一化坐标重新映射任务位置
+  let resizeTimer = null;
+  addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const arr = collectState();
+      // collectState 基于当前像素，先按旧视口重新归一化以避免尺寸跳变造成越界
+      const oldW = lastViewportW, oldH = lastViewportH;
+      Array.from(stage.querySelectorAll(".box")).forEach((b, i) => {
+        const s = b.offsetWidth;
+        const oldMaxX = Math.max(1, oldW - s);
+        const oldMaxY = Math.max(1, oldH - s);
+        const x = parseFloat(b.style.left) || 0;
+        const y = parseFloat(b.style.top) || 0;
+        if (arr[i]) {
+          arr[i].nx = Math.max(0, Math.min(1, x / oldMaxX));
+          arr[i].ny = Math.max(0, Math.min(1, y / oldMaxY));
+        }
+      });
+      lastViewportW = innerWidth;
+      lastViewportH = innerHeight;
+      restoreTaskArray(arr);
+      saveState();
+    }, 160);
+  });
+
+  refreshAuthUI();
+  initCloud();
+
 </script>
 </body>
 </html>
