@@ -44,3 +44,39 @@
 ## 安全边界
 
 插件脚本与主站运行在同一页面，因此仓库中的插件应视为受信任代码。不要支持从任意第三方 URL 动态安装脚本，也不要把 Supabase secret/service-role key 写进插件。
+
+
+## 插件界面入口
+
+插件可以通过宿主提供的启动器 API 在右侧插件区添加快捷入口：
+
+```js
+api.host.addLauncher({
+  icon: "🍅",
+  label: "番茄钟",
+  onClick: () => {
+    // 打开插件自己的面板
+  }
+});
+```
+
+插件卸载时调用：
+
+```js
+api.host.removeLauncher();
+```
+
+如果插件定义了 `open()`，插件商店会提供“打开”按钮：
+
+```js
+window.TaskMatrixPlugins.register({
+  id: "example",
+  mount(api) {
+    // mount
+    return () => api.host.removeLauncher();
+  },
+  open() {
+    // open panel
+  }
+});
+```

@@ -1,62 +1,56 @@
 # tasks-matrix
 
-四象限任务管理应用，支持 GitHub Pages、账号登录、跨设备同步，以及可扩展的插件架构。
+四象限任务管理应用，支持 GitHub Pages、账号登录、跨设备同步和可选插件。
 
-## 核心功能
+## 当前结构
+
+核心页面只负责：
 
 - 四象限任务拖拽
-- 本机自动保存
-- 邮箱 + 密码注册 / 登录 / 退出
-- 修改密码
-- 同一账号跨设备同步
-- 任务位置使用归一化坐标，在不同屏幕尺寸上保持相近布局
-- GitHub Pages 静态部署，无需自己维护服务器
-- 插件运行时：额外功能可独立放在 `plugins/` 目录，不必再把全部逻辑塞进 `index.html`
+- 任务新增 / 删除 / 重置
+- 本机保存
+- 账号注册、登录、退出、修改密码
+- Supabase 跨设备同步
+- 插件运行时与插件商店
 
-> 当前第一阶段只完成插件基础架构。现有记账功能暂时仍保留在主页面，插件商店 UI 和功能迁移将在后续阶段进行。
+额外功能放在 `plugins/` 目录，通过插件商店由用户自行安装。
+
+## 插件商店
+
+主页面右下角的 **🧩** 按钮打开插件商店。
+
+当前插件：
+
+- **收支记账**：原来的固定右侧记账栏已经从核心代码中移除。只有安装插件后才加载记账界面。
+
+卸载插件默认只移除功能，不删除插件数据；以后重新安装仍可继续使用。
+
+旧版本的 `ledgerV1` 本机数据和云端 `state.ledger` 会自动迁移到记账插件的数据空间，但不会强制安装该插件。
 
 ## 插件架构
-
-目录结构：
 
 ```text
 /
 ├─ index.html
 ├─ plugin-runtime.js
+├─ plugin-store.js
 └─ plugins/
    ├─ manifest.json
+   ├─ ledger.js
    ├─ _template.js
    └─ README.md
 ```
 
-- `plugin-runtime.js`：负责插件发现、按需加载、安装/卸载、挂载/清理以及插件数据保存。
-- `plugins/manifest.json`：插件清单。新增正式插件时在这里登记。
-- `plugins/_template.js`：插件开发模板。
-- `plugins/README.md`：插件 API 与开发约定。
+新增普通插件通常只需要：
 
-插件安装列表和插件自己的状态会存入本机，并在用户登录后随 `app_state` 一起同步到 Supabase。
+1. 在 `plugins/` 新建插件脚本。
+2. 调用 `window.TaskMatrixPlugins.register({...})`。
+3. 在 `plugins/manifest.json` 登记名称、入口、版本等信息。
 
-## 一次性配置 Supabase
+无需再把插件业务逻辑写进 `index.html`。
 
-1. 创建一个 Supabase 项目。
-2. 在 Supabase 的 **SQL Editor** 中运行仓库里的 `supabase-setup.sql`。
-3. 在 **Authentication → Providers** 中确认 Email 登录已启用。
-4. 在 **Authentication → URL Configuration** 中，把 Site URL 设置为：
-   `https://hfzdsb.github.io/tasks-matrix/`
-5. 在 **Project Settings → API** 找到 Project URL 和 public publishable/anon key。
-6. 编辑仓库根目录的 `config.js`：
+## Supabase
 
-```js
-window.TASKS_MATRIX_CONFIG = {
-  SUPABASE_URL: "https://YOUR_PROJECT.supabase.co",
-  SUPABASE_ANON_KEY: "YOUR_PUBLIC_KEY"
-};
-```
+浏览器端只使用 publishable/anon key。不要把 `service_role` 或 secret key 放进 GitHub Pages。
 
-> 只能填写 public publishable/anon key。不要把 `service_role` 或 secret key 放进网页或 GitHub 仓库。
-
-## 同步方式
-
-登录后，网页会把当前任务、现有记账数据以及插件安装/状态数据保存到 Supabase 的 `app_state` 表。每个账号只能通过 RLS 访问自己的那一行数据。
-
-如果 Supabase 尚未配置或网络不可用，仍可使用本机模式；数据会保存在浏览器 localStorage 中。
+登录后，核心任务和插件快照统一保存在 `app_state` 中。RLS 继续保证每个普通用户只能访问自己的状态行。

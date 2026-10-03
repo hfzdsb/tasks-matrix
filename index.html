@@ -119,102 +119,6 @@
   .rbtn svg { width: 14px; height: 14px; }
   .rbtn:hover { color: #fff; border-color: rgba(255,255,255,.35); }
   .rbtn.armed { background: rgba(239,68,68,.3); border-color: #ef4444; color: #fecaca; }
-  /* ---------- 收支对比侧边栏 ---------- */
-  :root { --ledW: min(330px, calc(100vw - 16px)); }
-  body.ledger-open .fab  { right: calc(var(--ledW) + 18px); }
-  body.ledger-open .rbtn { right: calc(var(--ledW) + 14px); }
-  body.ledger-open #legend { left: calc((100% - var(--ledW)) / 2); transform: none; }
-  .fab, .rbtn { transition: right .22s ease; }
-
-  .ledger { position: fixed; top: 0; right: 0; bottom: 0; width: var(--ledW); z-index: 15;
-            background: rgba(13,20,38,.97); border-left: 1px solid rgba(255,255,255,.12);
-            box-shadow: -14px 0 44px rgba(0,0,0,.5); backdrop-filter: blur(6px);
-            display: flex; flex-direction: column; transition: transform .25s ease; }
-  body:not(.ledger-open) .ledger { transform: translateX(101%); }
-
-  .ledger header { padding: 13px 14px 10px; border-bottom: 1px dashed rgba(255,255,255,.1);
-                  display: flex; justify-content: space-between; align-items: flex-start; }
-  .ledger header b { color: #fff; font-size: 15px; letter-spacing: 2px; }
-  .ledger header i { display: block; font-style: normal; color: rgba(255,255,255,.45);
-                     font-size: 11px; margin-top: 3px; }
-  .ledger header .hx { background: none; border: none; color: rgba(255,255,255,.65);
-                       font-size: 20px; cursor: pointer; line-height: 1; padding: 2px 8px; }
-  .ledger header .hx:hover { color: #fff; }
-
-  /* 记一笔输入条 */
-  .addbar { display: flex; gap: 6px; align-items: center; padding: 10px 12px;
-            border-bottom: 1px dashed rgba(255,255,255,.08); }
-  .tswitch { display: flex; flex: none; border-radius: 9px; overflow: hidden;
-             border: 1px solid rgba(255,255,255,.2); }
-  .tswitch button { border: none; background: transparent; color: rgba(255,255,255,.75);
-                    padding: 7px 10px; cursor: pointer; font-size: 13px; font-family: inherit; }
-  .tswitch button.on.in  { background: #16a34a; color: #fff; }
-  .tswitch button.on.out { background: #dc2626; color: #fff; }
-  .addbar input { min-width: 0; background: #0b1220; border: 1px solid #334155; color: #fff;
-                  border-radius: 8px; padding: 7px 8px; font-size: 13px; width: 86px; outline: none; }
-  .addbar input:focus { border-color: #818cf8; }
-  .addbar #ledNote { flex: 1; width: auto; }
-  .addbar .go { flex: none; width: 34px; height: 34px; border: none; border-radius: 9px;
-               cursor: pointer; color: #fff; font-size: 17px; line-height: 1;
-               background: linear-gradient(135deg, #6366f1, #8b5cf6); }
-  .addbar .go:hover { filter: brightness(1.15); }
-
-  /* 两列表格 */
-  .ltable { flex: 1; overflow-y: auto; padding: 8px 10px; }
-  .ltable table { width: 100%; border-collapse: separate; border-spacing: 0 6px; table-layout: fixed; }
-  .ltable th { font-size: 12px; letter-spacing: 4px; text-align: center; padding-bottom: 4px; font-weight: 600; }
-  .ltable th.in  { color: #4ade80; }
-  .ltable th.out { color: #f87171; }
-  .ltable td { width: 50%; vertical-align: top; background: rgba(255,255,255,.04);
-               border-radius: 10px; padding: 7px 10px; position: relative; }
-  .ltable td.empty { color: rgba(255,255,255,.22); text-align: center; font-size: 12px; }
-  .ltable td.in  .amt { color: #4ade80; }
-  .ltable td.out .amt { color: #f87171; }
-  .amt { font-size: 13.5px; font-weight: 700; }
-  .note { color: rgba(255,255,255,.5); font-size: 11px; margin-top: 3px;
-          overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .del { position: absolute; top: 3px; right: 5px; background: none; border: none;
-         color: rgba(255,255,255,.35); font-size: 11px; cursor: pointer; opacity: 0; padding: 2px; }
-  .ltable td:hover .del { opacity: 1; }
-  .del:hover { color: #f87171; }
-  .totalrow td { background: rgba(255,255,255,.09); text-align: center; }
-  .totalrow .amt { font-weight: 800; font-size: 13px; }
-
-  /* 差距面板 */
-  .lgap { border-top: 1px dashed rgba(255,255,255,.14); padding: 10px 14px 12px;
-          background: rgba(2,6,23,.55); }
-  .lgap .row1 { display: flex; justify-content: space-between; align-items: center; }
-  .lgap .lbl { font-size: 11px; color: rgba(255,255,255,.55); letter-spacing: 2px; }
-  .diff { font-size: 23px; font-weight: 800; margin-top: 2px; }
-  .diff.pos  { color: #4ade80; }
-  .diff.neg  { color: #f87171; }
-  .diff.zero { color: #cbd5e1; }
-  .badge { font-size: 11px; padding: 2px 9px; border-radius: 999px; border: 1px solid; font-weight: 600; }
-  .badge.pos  { color: #4ade80; border-color: #16a34a; }
-  .badge.neg  { color: #f87171; border-color: #dc2626; }
-  .badge.zero { color: #cbd5e1; border-color: #64748b; }
-  .bar { height: 10px; border-radius: 6px; overflow: hidden; display: flex;
-         margin: 10px 0 5px; background: rgba(255,255,255,.07); }
-  .bar .bi { height: 100%; background: linear-gradient(90deg, #22c55e, #4ade80); }
-  .bar .bo { height: 100%; background: linear-gradient(90deg, #f87171, #dc2626); }
-  .barfoot { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,.6); }
-  .lgap .tools { margin-top: 9px; display: flex; justify-content: flex-end; }
-  .mini { background: none; border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.65);
-          font-size: 11px; border-radius: 999px; padding: 4px 12px; cursor: pointer; font-family: inherit; }
-  .mini:hover { color: #fff; border-color: rgba(255,255,255,.45); }
-  .mini.armed { background: rgba(239,68,68,.25); border-color: #ef4444; color: #fecaca; }
-
-  /* 收起后的开合标签（贴右侧竖排） */
-  .ledtab { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 9;
-            writing-mode: vertical-rl; display: flex; align-items: center; gap: 7px; cursor: pointer;
-            padding: 15px 9px; background: rgba(15,23,42,.9); border: 1px solid rgba(255,255,255,.18);
-            border-right: none; border-radius: 14px 0 0 14px; color: rgba(255,255,255,.85);
-            font-size: 13px; letter-spacing: 4px; backdrop-filter: blur(4px); }
-  .ledtab .ic { writing-mode: horizontal-tb; font-size: 15px; }
-  .ledtab:hover { color: #c7d2fe; border-color: #818cf8; }
-  body.ledger-open .ledtab { display: none; }
-
-
   /* ---------- 账号与同步 ---------- */
   .account { position: fixed; left: 18px; top: 14px; z-index: 18; display: flex; align-items: center; gap: 8px; }
   .account button { border: 1px solid rgba(255,255,255,.16); background: rgba(15,23,42,.78); color: rgba(255,255,255,.9);
@@ -251,7 +155,7 @@
 
 </style>
 </head>
-<body class="ledger-open">
+<body>
 
   <!-- 四个象限：1 重要且紧急 | 2 重要不紧急 | 3 不重要但紧急 | 4 不重要且不紧急 -->
   <div class="q q1"><span class="num">1</span>
@@ -274,7 +178,7 @@
     <div class="auth-card">
       <button class="auth-close" id="authClose" type="button">×</button>
       <h2>账号与跨设备同步</h2>
-      <p id="authHint">登录后，你的任务布局和收支记录会同步到其他设备。</p>
+      <p id="authHint">登录后，你的任务布局和插件数据会同步到其他设备。</p>
       <input id="authEmail" type="email" placeholder="邮箱" autocomplete="email" />
       <input id="authPassword" type="password" placeholder="密码（至少 6 位）" autocomplete="current-password" />
       <div id="passwordChangeBox" style="display:none">
@@ -337,41 +241,9 @@
     <span id="resetTxt">重置</span>
   </button>
 
-  <!-- 收支对比侧边栏：收入 | 支出 两列表 + 差距 -->
-  <aside class="ledger" id="ledger">
-    <header>
-      <div><b>收支对比</b><i>收入 − 支出 = 差距</i></div>
-      <button class="hx" id="ledClose" title="收起侧边栏">»</button>
-    </header>
-    <div class="addbar">
-      <div class="tswitch" id="ledSwitch">
-        <button type="button" class="on in" data-t="1">收</button>
-        <button type="button" data-t="0">支</button>
-      </div>
-      <input id="ledAmt" type="number" min="0" step="0.01" placeholder="金额" />
-      <input id="ledNote" type="text" maxlength="14" placeholder="备注(可选)" />
-      <button class="go" id="ledGo" title="记一笔">＋</button>
-    </div>
-    <div class="ltable">
-      <table>
-        <thead><tr><th class="in">收 入</th><th class="out">支 出</th></tr></thead>
-        <tbody id="ledBody"></tbody>
-      </table>
-    </div>
-    <div class="lgap">
-      <div class="row1"><span class="lbl">差距（收入−支出）</span><span id="ledBadgeBox"></span></div>
-      <div class="diff zero" id="ledDiff">¥0</div>
-      <div class="bar"><div class="bi" id="ledBarIn"></div><div class="bo" id="ledBarOut"></div></div>
-      <div class="barfoot"><span id="ledInTotal">收入 ¥0</span><span id="ledOutTotal">支出 ¥0</span></div>
-      <div class="tools"><button class="mini" id="ledClear">清空记录</button></div>
-    </div>
-  </aside>
-
-  <!-- 收起侧边栏后的竖排开合标签 -->
-  <div class="ledtab" id="ledTab" title="打开收支对比"><span class="ic">📊</span><span>收 支</span></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script src="plugin-runtime.js"></script>
+<script src="plugin-runtime.js"></script>\n<script src="plugin-store.js"></script>
 <script>
   const stage = document.getElementById("stage");
   const quads = document.querySelectorAll(".q");
@@ -752,209 +624,6 @@
   document.addEventListener("pointerdown", (e) => {
     if (!resetBtn.contains(e.target)) disarmReset();
   }, true);
-  // ================= 收支对比侧边栏 =================
-  const LED_KEY = "ledgerV1";
-  const LED_OPEN_KEY = "ledgerOpenV1";
-  let led = [];
-  let ledType = 1; // 1=收入 0=支出
-  let ledClearArmed = false;
-  let ledArmTimer = null;
-
-  const ledEl = document.getElementById("ledger");
-  const ledBody = document.getElementById("ledBody");
-  const ledAmtEl = document.getElementById("ledAmt");
-  const ledNoteEl = document.getElementById("ledNote");
-  const ledSwitch = document.getElementById("ledSwitch");
-  const ledTypeBtns = ledSwitch.querySelectorAll("button");
-
-  function ledFmt(n) {
-    return "¥" + Number(n).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
-  }
-
-  // 加载；首次使用给两条示例记录，方便立刻看到效果
-  function ledLoad() {
-    try {
-      const raw = localStorage.getItem(LED_KEY);
-      if (raw !== null) {
-        const a = JSON.parse(raw);
-        if (Array.isArray(a)) { led = a; return; }
-      }
-    } catch (e) { /* 忽略 */ }
-    led = [
-      { id: 1, t: 1, amt: 5000,  note: "工资" },
-      { id: 2, t: 1, amt: 1200,  note: "项目奖金" },
-      { id: 3, t: 0, amt: 1800,  note: "房租" },
-      { id: 4, t: 0, amt: 950,   note: "日常餐饮" },
-    ];
-    ledSave();
-  }
-  function ledSave() {
-    try { localStorage.setItem(LED_KEY, JSON.stringify(led)); } catch (e) { /* 忽略 */ }
-    scheduleCloudSave();
-  }
-
-  function ledCell(rec, isIn) {
-    const td = document.createElement("td");
-    td.className = isIn ? "in" : "out";
-    if (!rec) { td.classList.add("empty"); td.textContent = "—"; return td; }
-    const amt = document.createElement("div");
-    amt.className = "amt";
-    amt.textContent = (isIn ? "+" : "-") + ledFmt(rec.amt);
-    td.appendChild(amt);
-    if (rec.note) {
-      const n = document.createElement("div");
-      n.className = "note";
-      n.textContent = rec.note;
-      td.appendChild(n);
-    }
-    const del = document.createElement("button");
-    del.className = "del";
-    del.title = "删除这条记录";
-    del.textContent = "✕";
-    del.addEventListener("click", () => {
-      led = led.filter((x) => x.id !== rec.id);
-      ledSave();
-      ledRender();
-    });
-    td.appendChild(del);
-    return td;
-  }
-
-  function ledRender() {
-    const ins = [];
-    const outs = [];
-    let tin = 0;
-    let tout = 0;
-
-    // 单次遍历完成分类和汇总；记录本身按添加顺序已递增，无需每次排序
-    for (const item of led) {
-      if (item.t === 1) {
-        ins.push(item);
-        tin += item.amt;
-      } else {
-        outs.push(item);
-        tout += item.amt;
-      }
-    }
-
-    const N = Math.max(ins.length, outs.length);
-
-    // 先在内存中组装，再一次性挂载，减少反复触碰真实 DOM
-    const frag = document.createDocumentFragment();
-    for (let i = 0; i < N; i++) {
-      const tr = document.createElement("tr");
-      tr.appendChild(ledCell(ins[i], true));
-      tr.appendChild(ledCell(outs[i], false));
-      frag.appendChild(tr);
-    }
-
-    ledBody.innerHTML = "";
-    ledBody.appendChild(frag);
-    const trT = document.createElement("tr");
-    trT.className = "totalrow";
-    const t1 = document.createElement("td");
-    const d1 = document.createElement("div");
-    d1.className = "amt"; d1.textContent = ledFmt(tin);
-    t1.appendChild(d1);
-    const t2 = document.createElement("td");
-    const d2 = document.createElement("div");
-    d2.className = "amt"; d2.textContent = ledFmt(tout);
-    t2.appendChild(d2);
-    trT.appendChild(t1); trT.appendChild(t2);
-    ledBody.appendChild(trT);
-
-    // 差距面板
-    const diff = tin - tout;
-    const diffEl = document.getElementById("ledDiff");
-    const badgeBox = document.getElementById("ledBadgeBox");
-    diffEl.className = "diff " + (diff > 0 ? "pos" : diff < 0 ? "neg" : "zero");
-    diffEl.textContent = diff === 0 ? "¥0" : (diff > 0 ? "+" : "-") + ledFmt(Math.abs(diff));
-    badgeBox.innerHTML = "";
-    const bd = document.createElement("span");
-    bd.className = "badge " + (diff > 0 ? "pos" : diff < 0 ? "neg" : "zero");
-    bd.textContent = diff > 0 ? "盈余" : diff < 0 ? "缺口" : "平衡";
-    badgeBox.appendChild(bd);
-
-    // 占比条（绿=收入占比 红=支出占比）
-    const barIn = document.getElementById("ledBarIn");
-    const barOut = document.getElementById("ledBarOut");
-    const g1 = Math.round(tin * 1000) + 1, g2 = Math.round(tout * 1000) + 1;
-    barIn.style.flexGrow = g1;
-    barOut.style.flexGrow = g2;
-    document.getElementById("ledInTotal").textContent = "收入 " + ledFmt(tin);
-    document.getElementById("ledOutTotal").textContent = "支出 " + ledFmt(tout);
-  }
-
-  // 收入/支出切换
-  ledTypeBtns.forEach((b) => {
-    b.addEventListener("click", () => {
-      ledTypeBtns.forEach((x) => x.classList.remove("on", "in", "out"));
-      b.classList.add("on", b.dataset.t === "1" ? "in" : "out");
-      ledType = Number(b.dataset.t);
-    });
-  });
-
-  // 记一笔
-  function ledAdd() {
-    const amt = parseFloat(ledAmtEl.value);
-    if (!isFinite(amt) || amt <= 0) {
-      ledAmtEl.style.borderColor = "#ef4444";
-      ledAmtEl.focus();
-      setTimeout(() => { ledAmtEl.style.borderColor = ""; }, 700);
-      return;
-    }
-    led.push({
-      id: Date.now() + Math.random(),
-      t: ledType,
-      amt: Math.round(amt * 100) / 100,
-      note: ledNoteEl.value.trim().slice(0, 14),
-    });
-    ledAmtEl.value = "";
-    ledNoteEl.value = "";
-    ledSave();
-    ledRender();
-    ledAmtEl.focus();
-  }
-  document.getElementById("ledGo").addEventListener("click", ledAdd);
-  ledAmtEl.addEventListener("keydown", (e) => { if (e.key === "Enter") ledAdd(); });
-
-  // 清空记录（点两下确认）
-  const ledClearBtn = document.getElementById("ledClear");
-  function ledDisarm() {
-    ledClearArmed = false;
-    ledClearBtn.classList.remove("armed");
-    ledClearBtn.textContent = "清空记录";
-    clearTimeout(ledArmTimer);
-  }
-  ledClearBtn.addEventListener("click", () => {
-    if (!ledClearArmed) {
-      ledClearArmed = true;
-      ledClearBtn.classList.add("armed");
-      ledClearBtn.textContent = "再点一次确认清空";
-      clearTimeout(ledArmTimer);
-      ledArmTimer = setTimeout(ledDisarm, 3000);
-      return;
-    }
-    led = [];
-    ledDisarm();
-    ledSave();
-    ledRender();
-  });
-
-  // 展开 / 收起（记住偏好）
-  function ledOpen(v) {
-    document.body.classList.toggle("ledger-open", v);
-    try { localStorage.setItem(LED_OPEN_KEY, v ? "1" : "0"); } catch (e) { /* 忽略 */ }
-  }
-  document.getElementById("ledClose").addEventListener("click", () => ledOpen(false));
-  document.getElementById("ledTab").addEventListener("click", () => ledOpen(true));
-  try {
-    if (localStorage.getItem(LED_OPEN_KEY) === "0") ledOpen(false);
-  } catch (e) { /* 忽略 */ }
-
-  ledLoad();
-  ledRender();
-
   // ================= 账号 / Supabase 跨设备同步 =================
   const cfg = window.TASKS_MATRIX_CONFIG || {};
   let lastViewportW = innerWidth;
@@ -1009,7 +678,7 @@
       authEmail.style.display = "";
       authPassword.style.display = "";
       authHint.textContent = isCloudConfigured()
-        ? "登录后，你的任务布局和收支记录会同步到其他设备。"
+        ? "登录后，你的任务布局和插件数据会同步到其他设备。"
         : "Supabase 尚未配置。当前仍可使用本机存储。";
       setSyncState("");
     }
@@ -1030,10 +699,8 @@
     if (!sb || !currentUser || cloudApplying) return;
     setSyncState("busy");
     const payload = {
-      version: 3,
+      version: 4,
       tasks: collectState(),
-      ledger: led,
-      ledgerOpen: document.body.classList.contains("ledger-open"),
       plugins: window.TaskMatrixPlugins?.getSnapshot?.() || null
     };
     const { error } = await sb.from("app_state").upsert({
@@ -1077,14 +744,24 @@
         restoreTaskArray(st.tasks);
         try { localStorage.setItem(SAVE_KEY, JSON.stringify(st.tasks)); } catch (e) {}
       }
-      if (Array.isArray(st.ledger)) {
-        led = st.ledger;
-        try { localStorage.setItem(LED_KEY, JSON.stringify(led)); } catch (e) {}
-        ledRender();
-      }
-      if (typeof st.ledgerOpen === "boolean") ledOpen(st.ledgerOpen);
-      if (st.plugins && window.TaskMatrixPlugins?.restoreSnapshot) {
-        await window.TaskMatrixPlugins.restoreSnapshot(st.plugins, { silent: true });
+      if (window.TaskMatrixPlugins?.restoreSnapshot) {
+        const pluginSnapshot = st.plugins && typeof st.plugins === "object"
+          ? {
+              version: 1,
+              installed: Array.isArray(st.plugins.installed) ? st.plugins.installed : [],
+              state: st.plugins.state && typeof st.plugins.state === "object"
+                ? { ...st.plugins.state }
+                : {}
+            }
+          : { version: 1, installed: [], state: {} };
+
+        if (Array.isArray(st.ledger) && !pluginSnapshot.state.ledger) {
+          pluginSnapshot.state.ledger = {
+            records: st.ledger,
+            open: false
+          };
+        }
+        await window.TaskMatrixPlugins.restoreSnapshot(pluginSnapshot, { silent: true });
       }
       cloudApplying = false;
       showToast("已从云端同步");
@@ -1242,12 +919,16 @@
   async function initPlugins() {
     if (!window.TaskMatrixPlugins) return;
     try {
+      window.TaskMatrixPluginUI?.init?.({ toast: showToast });
       await window.TaskMatrixPlugins.boot({
         toast: showToast,
         requestSave: scheduleCloudSave,
         getUser: () => currentUser,
-        getTasks: collectState
+        getTasks: collectState,
+        addLauncher: (id, item) => window.TaskMatrixPluginUI?.addLauncher?.(id, item),
+        removeLauncher: (id) => window.TaskMatrixPluginUI?.removeLauncher?.(id)
       });
+      window.TaskMatrixPluginUI?.refresh?.();
     } catch (err) {
       console.warn("插件系统初始化失败：", err);
       showToast("插件系统初始化失败");

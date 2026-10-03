@@ -1,4 +1,14 @@
 {
   "version": 1,
-  "plugins": []
+  "plugins": [
+    {
+      "id": "ledger",
+      "name": "收支记账",
+      "description": "记录收入与支出，查看总额和当前差额。数据保留在你的账号状态中。",
+      "icon": "📒",
+      "entry": "plugins/ledger.js",
+      "version": "1.0.0",
+      "category": "效率工具"
+    }
+  ]
 }

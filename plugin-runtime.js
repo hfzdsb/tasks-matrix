@@ -97,9 +97,6 @@
     window.dispatchEvent(new CustomEvent("taskmatrix:plugin-registered", {
       detail: { id: definition.id }
     }));
-    if (booted && getInstalled().includes(definition.id)) {
-      mount(definition.id).catch((err) => console.error("[plugins] mount failed:", err));
-    }
     return definition;
   }
 
@@ -111,6 +108,8 @@
         requestSave: () => hostApi?.requestSave?.(),
         getUser: () => hostApi?.getUser?.() || null,
         getTasks: () => hostApi?.getTasks?.() || [],
+        addLauncher: (item) => hostApi?.addLauncher?.(id, item),
+        removeLauncher: () => hostApi?.removeLauncher?.(id),
       }),
       storage: Object.freeze({
         get: (fallback = null) => getState(id, fallback),
@@ -173,6 +172,16 @@
     if (!ids.includes(id)) setInstalled([...ids, id]);
     await mount(id);
     window.dispatchEvent(new CustomEvent("taskmatrix:plugin-installed", { detail: { id } }));
+  }
+
+  async function open(id) {
+    if (!getInstalled().includes(id)) throw new Error("插件尚未安装：" + id);
+    const plugin = await ensureLoaded(id);
+    await mount(id);
+    if (typeof plugin.open === "function") {
+      return plugin.open(pluginApi(id));
+    }
+    window.dispatchEvent(new CustomEvent("taskmatrix:plugin-open", { detail: { id } }));
   }
 
   async function uninstall(id, options = {}) {
@@ -243,6 +252,7 @@
     boot,
     install,
     uninstall,
+    open,
     list,
     getSnapshot,
     restoreSnapshot,
