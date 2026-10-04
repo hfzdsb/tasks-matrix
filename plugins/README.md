@@ -6,13 +6,15 @@
 
 - `manifest.json`：插件商店清单。前端根据这里的条目发现插件。
 - `_template.js`：新插件模板，不会自动加载。
-- 每个正式插件建议一个独立 JS 文件；复杂插件可以拥有自己的子目录和资源。
+- 每个正式插件使用一个独立 JS 文件，样式放在 `styles/plugins/<id>.css`。
+- 插件 JS 不要创建 `<style>` 标签，也不要写全局 CSS。
 
 ## 添加一个插件
 
 1. 复制 `_template.js`，例如创建 `plugins/pomodoro.js`。
-2. 使用 `window.TaskMatrixPlugins.register({...})` 注册插件。
-3. 在 `manifest.json` 的 `plugins` 数组中登记：
+2. 在 `styles/plugins/` 创建对应的 `pomodoro.css`。
+3. 使用 `window.TaskMatrixPlugins.register({...})` 注册插件。
+4. 在 `manifest.json` 的 `plugins` 数组中登记 JS 和 CSS：
 
 ```json
 {
@@ -21,6 +23,7 @@
   "description": "专注与休息计时器",
   "icon": "🍅",
   "entry": "plugins/pomodoro.js",
+  "style": "styles/plugins/pomodoro.css",
   "version": "1.0.0"
 }
 ```
@@ -80,3 +83,14 @@ window.TaskMatrixPlugins.register({
   }
 });
 ```
+
+## CSS 隔离规则
+
+- `styles/core.css`：核心布局。
+- `styles/plugin-theme.css`：插件通用控件基线。
+- `styles/plugin-store.css`：插件商店。
+- `styles/ui-2.css` / `styles/ui-2-panels.css`：UI 2.0 视觉覆盖。
+- `styles/cursor.css`：唯一允许定义全局鼠标样式的文件。
+- `styles/plugins/<id>.css`：单个插件自己的布局和基础样式。
+
+插件运行时会在挂载插件时加载其 `style`，卸载时移除对应 `<link>`，因此插件样式不会永久残留在页面中。

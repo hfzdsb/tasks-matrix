@@ -8,6 +8,7 @@
   const registry = new Map();
   const mounted = new Map();
   const loading = new Map();
+  const styleLoading = new Map();
   let manifest = [];
   let hostApi = null;
   let booted = false;
@@ -119,6 +120,39 @@
     });
   }
 
+  async function ensureStyle(id) {
+    const entry = entryFor(id);
+    if (!entry?.style) return null;
+
+    const existing = [...document.querySelectorAll("link[data-plugin-style]")]
+      .find((el) => el.dataset.pluginStyle === id);
+    if (existing) return existing;
+    if (styleLoading.has(id)) return styleLoading.get(id);
+
+    const promise = new Promise((resolve, reject) => {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = entry.style;
+      link.dataset.pluginStyle = id;
+      link.onload = () => resolve(link);
+      link.onerror = () => {
+        link.remove();
+        reject(new Error("插件样式加载失败：" + id));
+      };
+      document.head.appendChild(link);
+    }).finally(() => styleLoading.delete(id));
+
+    styleLoading.set(id, promise);
+    return promise;
+  }
+
+  function removeStyle(id) {
+    for (const link of document.querySelectorAll("link[data-plugin-style]")) {
+      if (link.dataset.pluginStyle === id) link.remove();
+    }
+    styleLoading.delete(id);
+  }
+
   async function ensureLoaded(id) {
     if (registry.has(id)) return registry.get(id);
     if (loading.has(id)) return loading.get(id);
@@ -146,14 +180,23 @@
   async function mount(id) {
     if (mounted.has(id)) return mounted.get(id);
     const plugin = await ensureLoaded(id);
-    const cleanup = await plugin.mount(pluginApi(id));
-    mounted.set(id, typeof cleanup === "function" ? cleanup : null);
-    window.dispatchEvent(new CustomEvent("taskmatrix:plugin-mounted", { detail: { id } }));
-    return cleanup;
+    try {
+      await ensureStyle(id);
+      const cleanup = await plugin.mount(pluginApi(id));
+      mounted.set(id, typeof cleanup === "function" ? cleanup : null);
+      window.dispatchEvent(new CustomEvent("taskmatrix:plugin-mounted", { detail: { id } }));
+      return cleanup;
+    } catch (err) {
+      removeStyle(id);
+      throw err;
+    }
   }
 
   async function unmount(id) {
-    if (!mounted.has(id)) return;
+    if (!mounted.has(id)) {
+      removeStyle(id);
+      return;
+    }
     const cleanup = mounted.get(id);
     try {
       if (typeof cleanup === "function") await cleanup();
@@ -162,6 +205,7 @@
       }
     } finally {
       mounted.delete(id);
+      removeStyle(id);
       window.dispatchEvent(new CustomEvent("taskmatrix:plugin-unmounted", { detail: { id } }));
     }
   }

@@ -415,13 +415,6 @@ body .tm-plugin-launcher:hover{
   border-color:rgba(129,140,248,.34) !important;
 }
 
-/* native cursor policy — effects never replace the OS pointer */
-button,a,.sw,[role="button"]{cursor:pointer !important}
-.box{cursor:grab !important}
-.box.dragging{cursor:grabbing !important}
-input,textarea{cursor:text !important}
-select{cursor:pointer !important}
-
 /* modal entrance */
 .auth-card,.tm-store-panel,[class^="tm-"][class*="-card"],[class^="tm-"][class$="-card"]{
   animation:uiPanelIn .22s cubic-bezier(.2,.8,.2,1);

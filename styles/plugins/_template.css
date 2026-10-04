@@ -1,0 +1,4 @@
+@layer plugin {
+  /* Scope every selector to your plugin's tm-* classes. */
+  .tm-plugin-template { }
+}

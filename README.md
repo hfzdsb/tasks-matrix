@@ -13,7 +13,7 @@
 - Supabase 跨设备同步
 - 插件运行时与插件商店
 
-额外功能放在 `plugins/` 目录，通过插件商店由用户自行安装。
+额外功能放在 `plugins/` 目录，通过插件商店由用户自行安装。所有 CSS 集中在 `styles/`，插件脚本不再动态注入样式。
 
 ## 插件商店
 
@@ -62,8 +62,9 @@
 新增普通插件通常只需要：
 
 1. 在 `plugins/` 新建插件脚本。
-2. 调用 `window.TaskMatrixPlugins.register({...})`。
-3. 在 `plugins/manifest.json` 登记名称、入口、版本等信息。
+2. 在 `styles/plugins/` 新建同名样式文件。
+3. 调用 `window.TaskMatrixPlugins.register({...})`。
+4. 在 `plugins/manifest.json` 登记 `entry` 与 `style`。
 
 无需再把插件业务逻辑写进 `index.html`。
 
@@ -72,3 +73,7 @@
 浏览器端只使用 publishable/anon key。不要把 `service_role` 或 secret key 放进 GitHub Pages。
 
 登录后，核心任务和插件快照统一保存在 `app_state` 中。RLS 继续保证每个普通用户只能访问自己的状态行。
+
+## CSS 目录
+
+`styles/` 是唯一的样式目录：核心、UI 2.0、插件商店、鼠标规则和插件私有样式都放在这里。`styles/cursor.css` 是唯一允许定义全局鼠标样式的文件。

@@ -57,33 +57,7 @@
     });
   }
 
-  function injectStyles() {
-    if (document.getElementById("tm-ledger-style")) return document.getElementById("tm-ledger-style");
-    const s = document.createElement("style");
-    s.id = "tm-ledger-style";
-    s.textContent = `
-      .tm-ledger{position:fixed;top:0;right:0;bottom:0;width:min(360px,calc(100vw - 14px));z-index:60;display:flex;flex-direction:column;background:rgba(13,20,38,.985);border-left:1px solid rgba(255,255,255,.12);box-shadow:-16px 0 48px rgba(0,0,0,.5);transform:translateX(102%);transition:transform .23s ease;color:#fff;font-family:"Segoe UI","Microsoft YaHei",sans-serif}
-      .tm-ledger.open{transform:translateX(0)}
-      .tm-ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:15px 15px 12px;border-bottom:1px solid rgba(255,255,255,.09)}
-      .tm-ledger-title{font-weight:700;letter-spacing:1px}.tm-ledger-sub{font-size:11px;color:#94a3b8;margin-top:3px}
-      .tm-ledger-close{border:0;background:transparent;color:#94a3b8;font-size:22px;cursor:pointer}
-      .tm-ledger-add{display:grid;grid-template-columns:auto 88px 1fr 36px;gap:6px;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
-      .tm-ledger-switch{display:flex;border:1px solid rgba(255,255,255,.16);border-radius:9px;overflow:hidden}
-      .tm-ledger-switch button{border:0;background:transparent;color:#cbd5e1;padding:7px 9px;cursor:pointer}.tm-ledger-switch .on.in{background:#15803d;color:#fff}.tm-ledger-switch .on.out{background:#b91c1c;color:#fff}
-      .tm-ledger input{min-width:0;width:100%;border:1px solid #334155;border-radius:8px;background:#0b1220;color:#fff;padding:8px;outline:none}.tm-ledger input:focus{border-color:#818cf8}
-      .tm-ledger-go{height:34px;border:0;border-radius:9px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:17px;cursor:pointer}
-      .tm-ledger-list{flex:1;overflow:auto;padding:9px 10px}.tm-ledger-list table{width:100%;border-collapse:separate;border-spacing:0 6px;table-layout:fixed}.tm-ledger-list th{font-size:12px;letter-spacing:3px;padding-bottom:3px}.tm-ledger-list th.in{color:#4ade80}.tm-ledger-list th.out{color:#f87171}
-      .tm-ledger-list td{width:50%;position:relative;vertical-align:top;background:rgba(255,255,255,.045);border-radius:10px;padding:8px 10px}.tm-ledger-list td.empty{text-align:center;color:#475569}.tm-ledger-amt{font-weight:700;font-size:13px}.tm-ledger-list td.in .tm-ledger-amt{color:#4ade80}.tm-ledger-list td.out .tm-ledger-amt{color:#f87171}
-      .tm-ledger-note{font-size:11px;color:#94a3b8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tm-ledger-del{position:absolute;top:4px;right:5px;border:0;background:transparent;color:#64748b;cursor:pointer}.tm-ledger-del:hover{color:#f87171}
-      .tm-ledger-total td{text-align:center;background:rgba(255,255,255,.09)}
-      .tm-ledger-summary{padding:12px 14px 14px;border-top:1px solid rgba(255,255,255,.09);background:rgba(2,6,23,.5)}.tm-ledger-summary-top{display:flex;justify-content:space-between;align-items:center}.tm-ledger-label{font-size:11px;color:#94a3b8}.tm-ledger-diff{font-size:24px;font-weight:800;margin-top:2px}.tm-ledger-diff.pos{color:#4ade80}.tm-ledger-diff.neg{color:#f87171}.tm-ledger-diff.zero{color:#cbd5e1}
-      .tm-ledger-bar{height:9px;border-radius:7px;overflow:hidden;display:flex;margin:10px 0 5px;background:rgba(255,255,255,.07)}.tm-ledger-bi{background:#22c55e}.tm-ledger-bo{background:#ef4444}.tm-ledger-foot{display:flex;justify-content:space-between;font-size:11px;color:#94a3b8}.tm-ledger-tools{display:flex;justify-content:flex-end;margin-top:10px}
-      .tm-ledger-clear{border:1px solid rgba(255,255,255,.15);border-radius:999px;background:transparent;color:#94a3b8;padding:5px 11px;cursor:pointer}.tm-ledger-clear.armed{border-color:#ef4444;color:#fecaca;background:rgba(127,29,29,.25)}
-      @media(max-width:520px){.tm-ledger-add{grid-template-columns:auto 82px 1fr 34px}.tm-ledger{width:calc(100vw - 8px)}}
-    `;
-    document.head.appendChild(s);
-    return s;
-  }
+  function injectStyles(){ return null; }
 
   function el(tag, cls, text) {
     const node = document.createElement(tag);
