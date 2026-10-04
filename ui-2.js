@@ -8,7 +8,7 @@
     if (document.getElementById("ui2Ambient")) return;
     const root = document.createElement("div");
     root.id = "ui2Ambient";
-    root.innerHTML = '<div class="ui2-grid"></div><div class="ui2-orb a"></div><div class="ui2-orb b"></div><div class="ui2-orb c"></div>';
+    root.innerHTML = '<div class="ui2-grid"></div><div class="ui2-ribbon one"></div><div class="ui2-ribbon two"></div><div class="ui2-orb a"></div><div class="ui2-orb b"></div><div class="ui2-orb c"></div>';
     document.body.prepend(root);
   }
 
