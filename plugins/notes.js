@@ -18,22 +18,7 @@
     apiRef?.storage.set({ notes });
   }
 
-  function injectStyle() {
-    if (document.getElementById("tm-notes-style")) return;
-    const s = document.createElement("style");
-    s.id = "tm-notes-style";
-    s.textContent = `
-      .tm-notes-overlay{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,23,.74);backdrop-filter:blur(5px)}
-      .tm-notes-overlay.open{display:flex}.tm-notes-card{width:min(650px,96vw);max-height:86vh;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.12);border-radius:22px;background:#111827;color:#fff;box-shadow:0 26px 80px rgba(0,0,0,.55);font-family:"Segoe UI","Microsoft YaHei",sans-serif}
-      .tm-notes-head{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px 12px;border-bottom:1px solid rgba(255,255,255,.08)}.tm-notes-head h2{margin:0;font-size:19px}.tm-notes-head p{margin:4px 0 0;color:#94a3b8;font-size:12px}.tm-notes-x{border:0;background:transparent;color:#94a3b8;font-size:24px;cursor:pointer}
-      .tm-notes-compose{padding:14px;border-bottom:1px solid rgba(255,255,255,.08)}.tm-notes-compose textarea{width:100%;min-height:90px;resize:vertical;border:1px solid #334155;border-radius:12px;background:#0b1220;color:#fff;padding:11px 12px;outline:none;font-family:inherit}.tm-notes-compose textarea:focus{border-color:#818cf8}
-      .tm-notes-compose-row{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:8px}.tm-notes-count{font-size:11px;color:#64748b}.tm-notes-add{border:0;border-radius:10px;background:#4f46e5;color:#fff;padding:9px 16px;cursor:pointer}
-      .tm-notes-list{overflow:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}.tm-note{position:relative;min-height:110px;padding:13px 34px 12px 13px;border-radius:14px;border:1px solid rgba(255,255,255,.09);background:rgba(30,41,59,.68)}
-      .tm-note-text{white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.55;color:#e2e8f0}.tm-note-time{margin-top:10px;color:#64748b;font-size:10px}.tm-note-del{position:absolute;right:8px;top:7px;border:0;background:transparent;color:#64748b;cursor:pointer;font-size:17px}.tm-note-del:hover{color:#f87171}
-      .tm-notes-empty{grid-column:1/-1;text-align:center;color:#64748b;padding:28px}
-    `;
-    document.head.appendChild(s);
-  }
+  function injectStyle(){ return null; }
 
   function make(tag, cls, text) {
     const el = document.createElement(tag);
