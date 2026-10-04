@@ -67,7 +67,7 @@
       "description": "按星期安排课程、固定日程和重复活动，适合课表与每周计划。",
       "icon": "📅",
       "entry": "plugins/schedule.js",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "时间",
       "style": "styles/plugins/schedule.css"
     },
@@ -77,7 +77,7 @@
       "description": "独立于四象限的轻量待办清单，适合零碎事项和快速勾选。",
       "icon": "☑️",
       "entry": "plugins/checklist.js",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "效率",
       "style": "styles/plugins/checklist.css"
     },
@@ -87,7 +87,7 @@
       "description": "记录当天累计学习时长，并查看最近 7 天的学习时间。",
       "icon": "📚",
       "entry": "plugins/study-timer.js",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "学习",
       "style": "styles/plugins/study-timer.css"
     },
@@ -97,7 +97,7 @@
       "description": "创建可量化目标，更新当前进度并用进度条直观看完成比例。",
       "icon": "🎯",
       "entry": "plugins/goals.js",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "目标",
       "style": "styles/plugins/goals.css"
     },
@@ -107,7 +107,7 @@
       "description": "每天回答三个复盘问题，记录完成、问题和明天最重要的一件事。",
       "icon": "🌙",
       "entry": "plugins/daily-review.js",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "反思",
       "style": "styles/plugins/daily-review.css"
     },
@@ -117,7 +117,7 @@
       "description": "把纠结的选项放进去，随机抽取一个结果，适合低成本小决定。",
       "icon": "🎲",
       "entry": "plugins/random-picker.js",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "工具",
       "style": "styles/plugins/random-picker.css"
     }
