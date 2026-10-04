@@ -2,7 +2,8 @@
   "use strict";
 
   // 复制本文件并改名，例如 plugins/my-tool.js。
-  // 然后在 plugins/manifest.json 中添加对应条目即可。
+  // 样式放到 styles/plugins/my-tool.css；不要在 JS 中动态创建 <style>。
+  // 然后在 plugins/manifest.json 中同时登记 entry 和 style。
   window.TaskMatrixPlugins.register({
     id: "plugin-template",
 
