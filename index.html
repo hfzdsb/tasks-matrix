@@ -176,6 +176,7 @@
 
 </style>
 <link rel="stylesheet" href="plugin-theme.css" />
+<link rel="stylesheet" href="ui-2.css" />
 </head>
 <body>
 
@@ -220,9 +221,9 @@
   </div>
 
   <div id="stage"></div>
-  <div class="pill" id="hint">拖动任务到合适象限；登录后可跨设备同步 🖐</div>
+  <div class="pill" id="hint">拖动任务，重新安排你的注意力 · 登录后自动同步</div>
   <div class="pill" id="toast"></div>
-  <div class="pill" id="legend">横轴 = 紧急性（左：紧急 → 右：不紧急）　纵轴 = 重要性（上：重要 → 下：不重要）</div>
+  <div class="pill" id="legend">紧急 ←　→ 不紧急　 · 　重要 ↑　↓ 不重要</div>
 
 
   <!-- 添加方块按钮 -->
@@ -268,6 +269,7 @@
 <script src="config.js"></script>
 <script src="plugin-runtime.js"></script>
 <script src="plugin-store.js"></script>
+<script src="ui-2.js"></script>
 <script>
   const stage = document.getElementById("stage");
   const quads = document.querySelectorAll(".q");
