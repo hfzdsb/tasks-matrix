@@ -1,0 +1,218 @@
+/* Shared visual baseline for all optional plugins.
+   Plugin-specific styles still control each plugin's colors/layout. */
+
+:root {
+  --tm-ui-border: rgba(255,255,255,.12);
+  --tm-ui-border-hover: rgba(129,140,248,.7);
+  --tm-ui-surface: rgba(30,41,59,.72);
+  --tm-ui-surface-hover: rgba(51,65,85,.9);
+  --tm-ui-text: #f8fafc;
+  --tm-ui-muted: #94a3b8;
+  --tm-ui-focus: rgba(99,102,241,.28);
+}
+
+/* Controls should never fall back to the browser's mismatched default font/interaction. */
+[class^="tm-"] button,
+[class*=" tm-"] button {
+  font-family: "Segoe UI","Microsoft YaHei",sans-serif;
+  line-height: 1.15;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    filter .14s ease,
+    transform .12s ease,
+    background .14s ease,
+    border-color .14s ease,
+    color .14s ease,
+    box-shadow .14s ease;
+}
+
+[class^="tm-"] button:hover:not(:disabled),
+[class*=" tm-"] button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+[class^="tm-"] button:active:not(:disabled),
+[class*=" tm-"] button:active:not(:disabled) {
+  transform: translateY(1px) scale(.985);
+}
+
+[class^="tm-"] button:focus-visible,
+[class*=" tm-"] button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--tm-ui-focus);
+}
+
+[class^="tm-"] button:disabled,
+[class*=" tm-"] button:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+  filter: none;
+  transform: none;
+}
+
+[class^="tm-"] input,
+[class*=" tm-"] input,
+[class^="tm-"] textarea,
+[class*=" tm-"] textarea,
+[class^="tm-"] select,
+[class*=" tm-"] select {
+  font-family: "Segoe UI","Microsoft YaHei",sans-serif;
+  color-scheme: dark;
+  transition: border-color .14s ease, box-shadow .14s ease, background .14s ease;
+}
+
+[class^="tm-"] input:focus,
+[class*=" tm-"] input:focus,
+[class^="tm-"] textarea:focus,
+[class*=" tm-"] textarea:focus,
+[class^="tm-"] select:focus,
+[class*=" tm-"] select:focus {
+  outline: none;
+  border-color: #818cf8 !important;
+  box-shadow: 0 0 0 3px var(--tm-ui-focus);
+}
+
+[class^="tm-"] input::placeholder,
+[class*=" tm-"] input::placeholder,
+[class^="tm-"] textarea::placeholder,
+[class*=" tm-"] textarea::placeholder {
+  color: #64748b;
+}
+
+/* All plugin modal close buttons share one hit target and hover treatment. */
+[class*="-head"] > button,
+.tm-store-close {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  background: rgba(255,255,255,.035) !important;
+  color: #94a3b8 !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
+}
+
+[class*="-head"] > button:hover,
+.tm-store-close:hover {
+  color: #fff !important;
+  background: rgba(255,255,255,.09) !important;
+  border-color: rgba(255,255,255,.12) !important;
+}
+
+/* Common action buttons added by the newer plugins. */
+.tm-sch-add button,
+.tm-check-add button,
+.tm-goal-add button,
+.tm-rand-add button,
+.tm-rev-save,
+.tm-rand-pick,
+.tm-study-actions button {
+  min-height: 38px;
+  border-radius: 10px !important;
+  padding: 9px 14px !important;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,.08) !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,.15);
+}
+
+/* Secondary destructive/text actions should still look intentional. */
+.tm-check-del,
+.tm-goal-del,
+.tm-rand-opt button {
+  min-height: 30px;
+  padding: 5px 8px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(248,113,113,.15) !important;
+  background: rgba(127,29,29,.08) !important;
+  color: #fca5a5 !important;
+  font-size: 11px;
+}
+
+.tm-check-del:hover,
+.tm-goal-del:hover,
+.tm-rand-opt button:hover {
+  background: rgba(127,29,29,.22) !important;
+  border-color: rgba(248,113,113,.3) !important;
+}
+
+/* The installed-plugin rail must stay usable even when many plugins are enabled. */
+.tm-plugin-dock {
+  max-height: calc(100vh - 290px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 5px 4px;
+  scrollbar-width: none;
+}
+
+.tm-plugin-dock::-webkit-scrollbar {
+  display: none;
+}
+
+.tm-plugin-launcher {
+  min-height: 38px;
+  max-width: 150px;
+  border-radius: 12px !important;
+  padding: 8px 11px !important;
+  background: rgba(15,23,42,.9) !important;
+  backdrop-filter: blur(8px);
+}
+
+.tm-plugin-launcher:hover {
+  background: rgba(30,41,59,.96) !important;
+  border-color: rgba(129,140,248,.65) !important;
+}
+
+/* Store filters/search should read as one coherent control system. */
+.tm-store-tab,
+.tm-store-cat {
+  font-weight: 600;
+}
+
+.tm-store-tab {
+  min-height: 38px;
+}
+
+.tm-store-cat {
+  min-height: 30px;
+}
+
+@media (max-width: 620px) {
+  .tm-plugin-dock {
+    max-height: calc(100vh - 300px);
+  }
+
+  .tm-plugin-launcher {
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0 !important;
+    justify-content: center;
+    border-radius: 13px !important;
+  }
+
+  .tm-plugin-launcher > span:last-child {
+    display: none;
+  }
+
+  .tm-plugin-launcher > span:first-child {
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class^="tm-"] button,
+  [class*=" tm-"] button,
+  [class^="tm-"] input,
+  [class*=" tm-"] input,
+  [class^="tm-"] textarea,
+  [class*=" tm-"] textarea,
+  [class^="tm-"] select,
+  [class*=" tm-"] select {
+    transition: none !important;
+  }
+}
