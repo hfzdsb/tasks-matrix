@@ -875,3 +875,88 @@ body .tm-rand-pick{
     transition:none !important;
   }
 }
+
+
+/* ---------- Motion language ---------- */
+@keyframes ui2PanelRise{
+  from{opacity:0;transform:translateY(14px) scale(.985)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes ui2PanelGlow{
+  0%{box-shadow:var(--panel-shadow),inset 0 1px 0 rgba(255,255,255,.045),0 0 0 rgba(var(--panel-accent-rgb),0)}
+  100%{box-shadow:var(--panel-shadow),inset 0 1px 0 rgba(255,255,255,.045),0 0 42px rgba(var(--panel-accent-rgb),.035)}
+}
+
+.auth-overlay.open .auth-card,
+.tm-store-overlay.open .tm-store-panel,
+.tm-pomo-overlay.open .tm-pomo-card,
+.tm-notes-overlay.open .tm-notes-card,
+.tm-habit-overlay.open .tm-habit-card,
+.tm-count-overlay.open .tm-count-card,
+.tm-insight-overlay.open .tm-insight-card,
+.tm-sch-ov.open .tm-sch,
+.tm-check-ov.open .tm-check,
+.tm-study-ov.open .tm-study,
+.tm-goal-ov.open .tm-goal,
+.tm-rev-ov.open .tm-rev,
+.tm-rand-ov.open .tm-rand{
+  animation:ui2PanelRise .22s cubic-bezier(.2,.8,.2,1),ui2PanelGlow .34s ease both;
+}
+
+body .tm-plugin-card{
+  position:relative;
+  overflow:hidden;
+}
+body .tm-plugin-card::after{
+  content:"";
+  position:absolute;
+  width:36%;
+  height:190%;
+  top:-45%;
+  left:-70%;
+  pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.055),transparent);
+  transform:rotate(18deg);
+  transition:left .58s cubic-bezier(.2,.8,.2,1);
+}
+body .tm-plugin-card:hover::after{left:130%}
+
+.tm-note,
+.tm-habit-row,
+.tm-count-row,
+.tm-insight-box,
+.tm-sch-item,
+.tm-check-row,
+.tm-goal-card,
+.tm-rand-opt{
+  transform:translateZ(0);
+}
+.tm-note:hover,
+.tm-habit-row:hover,
+.tm-count-row:hover,
+.tm-insight-box:hover,
+.tm-sch-item:hover,
+.tm-check-row:hover,
+.tm-goal-card:hover,
+.tm-rand-opt:hover{
+  transform:translateY(-2px);
+}
+
+@media(prefers-reduced-motion:reduce){
+  .auth-overlay.open .auth-card,
+  .tm-store-overlay.open .tm-store-panel,
+  .tm-pomo-overlay.open .tm-pomo-card,
+  .tm-notes-overlay.open .tm-notes-card,
+  .tm-habit-overlay.open .tm-habit-card,
+  .tm-count-overlay.open .tm-count-card,
+  .tm-insight-overlay.open .tm-insight-card,
+  .tm-sch-ov.open .tm-sch,
+  .tm-check-ov.open .tm-check,
+  .tm-study-ov.open .tm-study,
+  .tm-goal-ov.open .tm-goal,
+  .tm-rev-ov.open .tm-rev,
+  .tm-rand-ov.open .tm-rand{
+    animation:none !important;
+  }
+  body .tm-plugin-card::after{display:none}
+}
