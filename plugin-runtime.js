@@ -75,6 +75,12 @@
     return manifest.find((x) => x && x.id === id) || null;
   }
 
+  function versionedAsset(path, version) {
+    if (!path) return path;
+    const sep = path.includes("?") ? "&" : "?";
+    return path + sep + "v=" + encodeURIComponent(version || "1");
+  }
+
   async function loadManifest() {
     const res = await fetch(MANIFEST_URL, { cache: "no-store" });
     if (!res.ok) throw new Error("插件清单加载失败：HTTP " + res.status);
@@ -132,7 +138,7 @@
     const promise = new Promise((resolve, reject) => {
       const link = document.createElement("link");
       link.rel = "stylesheet";
-      link.href = entry.style;
+      link.href = versionedAsset(entry.style, entry.version);
       link.dataset.pluginStyle = id;
       link.onload = () => resolve(link);
       link.onerror = () => {
@@ -161,7 +167,7 @@
 
     const promise = new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = entry.entry;
+      script.src = versionedAsset(entry.entry, entry.version);
       script.async = true;
       script.dataset.pluginId = id;
       script.onload = () => {
