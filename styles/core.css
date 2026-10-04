@@ -1,4 +1,5 @@
 /* Core layout and functional styling. Keep component-specific UI2 overrides elsewhere. */
+@layer base, plugin;
 @layer base {
 * { margin: 0; padding: 0; box-sizing: border-box; }
   body { width: 100vw; height: 100vh; overflow: hidden; user-select: none; -webkit-user-select: none;
