@@ -179,9 +179,9 @@
 
   async function mount(id) {
     if (mounted.has(id)) return mounted.get(id);
-    await ensureStyle(id);
     const plugin = await ensureLoaded(id);
     try {
+      await ensureStyle(id);
       const cleanup = await plugin.mount(pluginApi(id));
       mounted.set(id, typeof cleanup === "function" ? cleanup : null);
       window.dispatchEvent(new CustomEvent("taskmatrix:plugin-mounted", { detail: { id } }));
@@ -193,7 +193,10 @@
   }
 
   async function unmount(id) {
-    if (!mounted.has(id)) return;
+    if (!mounted.has(id)) {
+      removeStyle(id);
+      return;
+    }
     const cleanup = mounted.get(id);
     try {
       if (typeof cleanup === "function") await cleanup();
