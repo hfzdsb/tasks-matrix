@@ -359,9 +359,20 @@ body .tm-plugin-launcher:hover{
   backdrop-filter:blur(1px);
   transition:width .14s ease,height .14s ease,margin .14s ease,border-color .14s ease,background .14s ease,opacity .18s ease;
 }
-body.ui2-cursor-on .ui2-cursor-dot,body.ui2-cursor-on .ui2-cursor-ring{opacity:1}
-body.ui2-cursor-on,body.ui2-cursor-on button,body.ui2-cursor-on a,body.ui2-cursor-on .box,body.ui2-cursor-on .sw{cursor:none !important}
-body.ui2-cursor-on input,body.ui2-cursor-on textarea,body.ui2-cursor-on select{cursor:text !important}
+/* Keep the native OS cursor as the reliable interaction cursor.
+   UI 2.0 adds only a decorative halo, so a browser rendering hiccup can never hide the pointer. */
+.ui2-cursor-dot{display:none}
+body.ui2-cursor-on .ui2-cursor-ring{opacity:1}
+body.ui2-cursor-on{cursor:default}
+body.ui2-cursor-on button,
+body.ui2-cursor-on a,
+body.ui2-cursor-on .sw,
+body.ui2-cursor-on [role="button"]{cursor:pointer !important}
+body.ui2-cursor-on .box{cursor:grab !important}
+body.ui2-cursor-on .box.dragging{cursor:grabbing !important}
+body.ui2-cursor-on input,
+body.ui2-cursor-on textarea{cursor:text !important}
+body.ui2-cursor-on select{cursor:pointer !important}
 .ui2-cursor-ring.hot{
   width:46px;height:46px;margin:-23px 0 0 -23px;
   border-color:rgba(165,180,252,.72);
