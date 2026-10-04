@@ -102,6 +102,25 @@
       };
       syncTaskVars();
       new MutationObserver(syncTaskVars).observe(stage, {childList:true});
+
+      let draggingBox = null;
+      stage.addEventListener("pointerdown", (e) => {
+        const box = e.target.closest(".box");
+        if (!box) return;
+        draggingBox = box;
+        box.classList.add("dragging");
+        document.body.classList.add("is-dragging");
+        window.TaskMatrixUI2?.setDragging?.(true);
+      }, true);
+
+      const clearDragVisual = () => {
+        draggingBox?.classList.remove("dragging");
+        draggingBox = null;
+        document.body.classList.remove("is-dragging");
+        window.TaskMatrixUI2?.setDragging?.(false);
+      };
+      window.addEventListener("pointerup", clearDragVisual, true);
+      window.addEventListener("pointercancel", clearDragVisual, true);
     }
   }
 
