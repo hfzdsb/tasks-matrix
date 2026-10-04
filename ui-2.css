@@ -342,49 +342,12 @@ body .tm-plugin-launcher:hover{
   border-color:rgba(129,140,248,.34) !important;
 }
 
-/* custom cursor */
-.ui2-cursor-dot,.ui2-cursor-ring{
-  position:fixed;left:0;top:0;z-index:200;pointer-events:none;border-radius:50%;
-  opacity:0;will-change:transform,width,height,border-color,background;
-}
-.ui2-cursor-dot{
-  width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
-  background:#e0e7ff;
-  box-shadow:0 0 14px rgba(129,140,248,.9);
-}
-.ui2-cursor-ring{
-  width:30px;height:30px;margin:-15px 0 0 -15px;
-  border:1px solid rgba(199,210,254,.42);
-  background:rgba(129,140,248,.035);
-  backdrop-filter:blur(1px);
-  transition:width .14s ease,height .14s ease,margin .14s ease,border-color .14s ease,background .14s ease,opacity .18s ease;
-}
-/* Keep the native OS cursor as the reliable interaction cursor.
-   UI 2.0 adds only a decorative halo, so a browser rendering hiccup can never hide the pointer. */
-.ui2-cursor-dot{display:none}
-body.ui2-cursor-on .ui2-cursor-ring{opacity:1}
-body.ui2-cursor-on{cursor:default}
-body.ui2-cursor-on button,
-body.ui2-cursor-on a,
-body.ui2-cursor-on .sw,
-body.ui2-cursor-on [role="button"]{cursor:pointer !important}
-body.ui2-cursor-on .box{cursor:grab !important}
-body.ui2-cursor-on .box.dragging{cursor:grabbing !important}
-body.ui2-cursor-on input,
-body.ui2-cursor-on textarea{cursor:text !important}
-body.ui2-cursor-on select{cursor:pointer !important}
-.ui2-cursor-ring.hot{
-  width:46px;height:46px;margin:-23px 0 0 -23px;
-  border-color:rgba(165,180,252,.72);
-  background:rgba(99,102,241,.075);
-}
-.ui2-cursor-ring.drag{
-  width:24px;height:24px;margin:-12px 0 0 -12px;
-  border-color:rgba(255,255,255,.84);
-  background:rgba(255,255,255,.08);
-}
-.ui2-cursor-ring.danger{border-color:rgba(248,113,113,.74);background:rgba(239,68,68,.055)}
-.ui2-cursor-ring.hide{opacity:0 !important}
+/* native cursor policy — effects never replace the OS pointer */
+button,a,.sw,[role="button"]{cursor:pointer !important}
+.box{cursor:grab !important}
+.box.dragging{cursor:grabbing !important}
+input,textarea{cursor:text !important}
+select{cursor:pointer !important}
 
 /* modal entrance */
 .auth-card,.tm-store-panel,[class^="tm-"][class*="-card"],[class^="tm-"][class$="-card"]{
