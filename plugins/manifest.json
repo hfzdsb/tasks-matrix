@@ -8,7 +8,8 @@
       "icon": "📒",
       "entry": "plugins/ledger.js",
       "version": "1.0.0",
-      "category": "生活"
+      "category": "生活",
+      "style": "styles/plugins/ledger.css"
     },
     {
       "id": "pomodoro",
@@ -17,7 +18,8 @@
       "icon": "🍅",
       "entry": "plugins/pomodoro.js",
       "version": "1.0.0",
-      "category": "专注"
+      "category": "专注",
+      "style": "styles/plugins/pomodoro.css"
     },
     {
       "id": "notes",
@@ -26,7 +28,8 @@
       "icon": "🗒️",
       "entry": "plugins/notes.js",
       "version": "1.0.0",
-      "category": "记录"
+      "category": "记录",
+      "style": "styles/plugins/notes.css"
     },
     {
       "id": "habits",
@@ -35,7 +38,8 @@
       "icon": "✅",
       "entry": "plugins/habits.js",
       "version": "1.0.0",
-      "category": "习惯"
+      "category": "习惯",
+      "style": "styles/plugins/habits.css"
     },
     {
       "id": "countdown",
@@ -44,7 +48,8 @@
       "icon": "⏳",
       "entry": "plugins/countdown.js",
       "version": "1.0.0",
-      "category": "时间"
+      "category": "时间",
+      "style": "styles/plugins/countdown.css"
     },
     {
       "id": "quadrant-insights",
@@ -53,7 +58,8 @@
       "icon": "📊",
       "entry": "plugins/quadrant-insights.js",
       "version": "1.0.0",
-      "category": "分析"
+      "category": "分析",
+      "style": "styles/plugins/quadrant-insights.css"
     },
     {
       "id": "schedule",
@@ -62,7 +68,8 @@
       "icon": "📅",
       "entry": "plugins/schedule.js",
       "version": "1.0.0",
-      "category": "时间"
+      "category": "时间",
+      "style": "styles/plugins/schedule.css"
     },
     {
       "id": "checklist",
@@ -71,7 +78,8 @@
       "icon": "☑️",
       "entry": "plugins/checklist.js",
       "version": "1.0.0",
-      "category": "效率"
+      "category": "效率",
+      "style": "styles/plugins/checklist.css"
     },
     {
       "id": "study-timer",
@@ -80,7 +88,8 @@
       "icon": "📚",
       "entry": "plugins/study-timer.js",
       "version": "1.0.0",
-      "category": "学习"
+      "category": "学习",
+      "style": "styles/plugins/study-timer.css"
     },
     {
       "id": "goals",
@@ -89,7 +98,8 @@
       "icon": "🎯",
       "entry": "plugins/goals.js",
       "version": "1.0.0",
-      "category": "目标"
+      "category": "目标",
+      "style": "styles/plugins/goals.css"
     },
     {
       "id": "daily-review",
@@ -98,7 +108,8 @@
       "icon": "🌙",
       "entry": "plugins/daily-review.js",
       "version": "1.0.0",
-      "category": "反思"
+      "category": "反思",
+      "style": "styles/plugins/daily-review.css"
     },
     {
       "id": "random-picker",
@@ -107,7 +118,8 @@
       "icon": "🎲",
       "entry": "plugins/random-picker.js",
       "version": "1.0.0",
-      "category": "工具"
+      "category": "工具",
+      "style": "styles/plugins/random-picker.css"
     }
   ]
 }
