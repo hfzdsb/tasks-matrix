@@ -58,21 +58,7 @@
     return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
   }
 
-  function injectStyle() {
-    if (document.getElementById("tm-pomo-style")) return;
-    const style = document.createElement("style");
-    style.id = "tm-pomo-style";
-    style.textContent = `
-      .tm-pomo-overlay{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,23,.74);backdrop-filter:blur(5px)}
-      .tm-pomo-overlay.open{display:flex}.tm-pomo-card{width:min(420px,94vw);border:1px solid rgba(255,255,255,.12);border-radius:22px;background:#111827;color:#fff;padding:20px;box-shadow:0 26px 80px rgba(0,0,0,.55);font-family:"Segoe UI","Microsoft YaHei",sans-serif}
-      .tm-pomo-head{display:flex;justify-content:space-between;align-items:flex-start}.tm-pomo-head h2{margin:0;font-size:19px}.tm-pomo-head p{margin:4px 0 0;color:#94a3b8;font-size:12px}.tm-pomo-x{border:0;background:transparent;color:#94a3b8;font-size:24px;cursor:pointer}
-      .tm-pomo-mode{display:flex;justify-content:center;margin-top:20px;color:#c4b5fd;font-size:13px;font-weight:700;letter-spacing:2px}.tm-pomo-time{text-align:center;font-size:62px;font-weight:800;letter-spacing:2px;margin:8px 0 6px;font-variant-numeric:tabular-nums}
-      .tm-pomo-progress{height:8px;border-radius:999px;overflow:hidden;background:#1f2937;margin:0 8px 20px}.tm-pomo-progress>div{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);transition:width .25s}
-      .tm-pomo-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.tm-pomo-actions button,.tm-pomo-presets button{border:0;border-radius:11px;padding:10px;color:#fff;cursor:pointer;font-family:inherit}.tm-pomo-start{background:#4f46e5}.tm-pomo-secondary{background:#334155}
-      .tm-pomo-info{display:flex;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);color:#94a3b8;font-size:12px}.tm-pomo-presets{display:flex;gap:8px;margin-top:12px}.tm-pomo-presets button{flex:1;background:#1f2937;font-size:12px}
-    `;
-    document.head.appendChild(style);
-  }
+  function injectStyle(){ return null; }
 
   function make(tag, cls, text) {
     const el = document.createElement(tag);
