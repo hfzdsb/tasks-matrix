@@ -130,20 +130,42 @@
   .auth-overlay { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center;
                   background: rgba(2,6,23,.72); backdrop-filter: blur(5px); }
   .auth-overlay.open { display: flex; }
-  .auth-card { width: min(92vw, 390px); background: #111827; border: 1px solid rgba(255,255,255,.12);
-               border-radius: 20px; padding: 22px; box-shadow: 0 24px 70px rgba(0,0,0,.55); }
-  .auth-card h2 { color: #fff; font-size: 19px; margin-bottom: 5px; }
-  .auth-card p { color: rgba(255,255,255,.52); font-size: 12px; margin-bottom: 16px; line-height: 1.5; }
-  .auth-card input { width: 100%; margin-bottom: 10px; padding: 11px 13px; border-radius: 10px; border: 1px solid #334155;
-                     background: #0b1220; color: #fff; outline: none; font-size: 14px; }
-  .auth-card input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(99,102,241,.24); }
-  .auth-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 5px; }
-  .auth-actions button, .auth-logout { border: none; border-radius: 10px; padding: 10px 12px; cursor: pointer; color: #fff; font-family: inherit; }
-  .auth-login { background: linear-gradient(135deg,#6366f1,#8b5cf6); }
-  .auth-register { background: #334155; }
-  .auth-logout { width: 100%; margin-top: 10px; background: #7f1d1d; }
+  .auth-card { width: min(92vw, 410px); background: #111827; border: 1px solid rgba(255,255,255,.12);
+               border-radius: 22px; padding: 24px; box-shadow: 0 24px 70px rgba(0,0,0,.55); }
+  .auth-card h2 { color: #fff; font-size: 20px; margin-bottom: 6px; letter-spacing: .2px; }
+  .auth-card p { color: rgba(255,255,255,.52); font-size: 12px; margin-bottom: 18px; line-height: 1.55; }
+  .auth-card input { width: 100%; min-height: 46px; margin-bottom: 10px; padding: 11px 13px; border-radius: 12px; border: 1px solid #334155;
+                     background: #0b1220; color: #fff; outline: none; font-size: 14px; font-family: inherit;
+                     transition: border-color .14s ease, box-shadow .14s ease, background .14s ease; }
+  .auth-card input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(99,102,241,.24); background: #0d1525; }
+  .auth-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 6px; }
+  .auth-actions button, .auth-logout, .auth-change {
+    min-height: 42px; border-radius: 11px; padding: 10px 13px; cursor: pointer; color: #fff; font-family: inherit;
+    font-size: 13px; font-weight: 600; transition: filter .14s ease, transform .12s ease, border-color .14s ease, background .14s ease;
+  }
+  .auth-actions button:hover, .auth-logout:hover, .auth-change:hover { filter: brightness(1.08); }
+  .auth-actions button:active, .auth-logout:active, .auth-change:active { transform: translateY(1px) scale(.99); }
+  .auth-login { border: none; background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+  .auth-register { border: 1px solid rgba(255,255,255,.10); background: #334155; }
+  .auth-password-panel { margin-top: 4px; }
+  .auth-section-title { margin: 2px 0 10px; color: #cbd5e1; font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+  .auth-change {
+    width: 100%; margin-top: 2px; border: 1px solid rgba(129,140,248,.45);
+    background: linear-gradient(135deg,#4f46e5,#7c3aed);
+    box-shadow: 0 8px 20px rgba(79,70,229,.22);
+  }
+  .auth-logout {
+    width: 100%; margin-top: 12px; border: 1px solid rgba(248,113,113,.22);
+    background: rgba(127,29,29,.18); color: #fecaca;
+  }
+  .auth-logout:hover { background: rgba(127,29,29,.34); border-color: rgba(248,113,113,.36); }
   .auth-msg { min-height: 18px; margin-top: 10px; font-size: 12px; color: #fca5a5; }
-  .auth-close { float: right; background: none; border: none; color: rgba(255,255,255,.65); font-size: 20px; cursor: pointer; }
+  .auth-close {
+    float: right; width: 32px; height: 32px; display: inline-grid; place-items: center;
+    background: rgba(255,255,255,.035); border: 1px solid transparent; border-radius: 9px;
+    color: rgba(255,255,255,.62); font-size: 20px; line-height: 1; cursor: pointer;
+  }
+  .auth-close:hover { color: #fff; background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.10); }
   .auth-user { color: #a7f3d0 !important; }
 
   /* 低性能/触控设备：减少大面积模糊与滤镜重绘 */
@@ -181,11 +203,12 @@
       <p id="authHint">登录后，你的任务布局和插件数据会同步到其他设备。</p>
       <input id="authEmail" type="email" placeholder="邮箱" autocomplete="email" />
       <input id="authPassword" type="password" placeholder="密码（至少 6 位）" autocomplete="current-password" />
-      <div id="passwordChangeBox" style="display:none">
+      <div class="auth-password-panel" id="passwordChangeBox" style="display:none">
+        <div class="auth-section-title">密码安全</div>
         <input id="currentPassword" type="password" placeholder="当前密码" autocomplete="current-password" />
         <input id="newPassword" type="password" placeholder="新密码（至少 8 位）" autocomplete="new-password" />
         <input id="confirmPassword" type="password" placeholder="再次输入新密码" autocomplete="new-password" />
-        <button class="auth-register" id="changePasswordBtn" type="button" style="width:100%;margin-top:2px">修改密码</button>
+        <button class="auth-change" id="changePasswordBtn" type="button">保存新密码</button>
       </div>
       <div class="auth-actions" id="authActions">
         <button class="auth-login" id="loginBtn" type="button">登录</button>
@@ -243,7 +266,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script src="plugin-runtime.js"></script>\n<script src="plugin-store.js"></script>
+<script src="plugin-runtime.js"></script>
+<script src="plugin-store.js"></script>
 <script>
   const stage = document.getElementById("stage");
   const quads = document.querySelectorAll(".q");
